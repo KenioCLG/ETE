@@ -35,183 +35,63 @@ interface SyllabusTrackerProps {
 export const DAYS_METADATA = [
   {
     day: 1,
-    title: 'Dia 1: Leitura Inicial & Operações Básicas',
-    subtitle: 'Texto, contexto e as quatro operações matemáticas primárias.',
-    topicIds: ['lp-comp-01', 'mat-01']
+    title: 'Dia 1: Compreensão Temática & Aritmética Primária',
+    subtitle: 'Interpretação textual, coesão, coerência, quatro operações, frações e decimais.',
+    topicIds: ['lp-comp-01', 'lp-comp-02', 'mat-01', 'mat-02', 'mat-03']
   },
   {
     day: 2,
-    title: 'Dia 2: Ideias Textuais & Frações',
-    subtitle: 'Compreensão de ideias principais/secundárias e cálculo de frações.',
-    topicIds: ['lp-comp-02', 'mat-02']
+    title: 'Dia 2: Gêneros Textuais, Potência & Radiciação',
+    subtitle: 'Tipos textuais, significação de palavras, propriedades de potência, radicais e expressões com números reais.',
+    topicIds: ['lp-comp-03', 'lp-comp-04', 'mat-04', 'mat-05', 'mat-06']
   },
   {
     day: 3,
-    title: 'Dia 3: Gêneros Textuais & Números Decimais',
-    subtitle: 'Tipologia textual e problemas cotidianos com números decimais.',
-    topicIds: ['lp-comp-03', 'mat-03']
+    title: 'Dia 3: Recursos Estilísticos & Razão e Proporção',
+    subtitle: 'Figuras de linguagem, norma culta, sistemas de medidas, conceitos de razão e partilha proporcional.',
+    topicIds: ['lp-comp-05', 'lp-ling-01', 'mat-07', 'mat-08', 'mat-09']
   },
   {
     day: 4,
-    title: 'Dia 4: Semântica & Potenciação',
-    subtitle: 'Sinonímia, antonímia, polissemia e propriedades de potência.',
-    topicIds: ['lp-comp-04', 'mat-04']
+    title: 'Dia 4: Estrutura de Palavras, Regra de Três & Médias',
+    subtitle: 'Formação de palavras, regra de três simples/composta, porcentagem e médias estatísticas.',
+    topicIds: ['lp-ling-02', 'mat-10', 'mat-11', 'mat-12']
   },
   {
     day: 5,
-    title: 'Dia 5: Sentido Figurado & Raiz Quadrada',
-    subtitle: 'Conotação, denotação e raízes exatas/aproximadas.',
-    topicIds: ['lp-comp-05', 'mat-05']
+    title: 'Dia 5: Classes de Palavras & Simplificação de Expressões',
+    subtitle: 'Classes gramaticais, termos da oração, expressões algébricas, produtos notáveis, fatoração e frações algébricas.',
+    topicIds: ['lp-ling-03', 'mat-13', 'mat-14', 'mat-15', 'mat-16']
   },
   {
     day: 6,
-    title: 'Dia 6: Variação Linguística & Números Reais',
-    subtitle: 'Variantes da língua, norma culta e expressões com números reais.',
-    topicIds: ['lp-ling-01', 'mat-06']
+    title: 'Dia 6: Conectivos, Equações & Sistemas Lineares',
+    subtitle: 'Coordenação, subordinação, equações do 1º e 2º grau e sistemas de equações.',
+    topicIds: ['lp-ling-04', 'mat-17', 'mat-18', 'mat-19']
   },
   {
     day: 7,
-    title: 'Dia 7: Formação de Palavras & Unidades de Medida',
-    subtitle: 'Morfologia básica, derivação e conversão de sistemas métricos.',
-    topicIds: ['lp-ling-02', 'mat-07']
+    title: 'Dia 7: Pontuação & Geometria Plana Básica',
+    subtitle: 'Uso da vírgula, conceitos de ângulos, retas paralelas e propriedades dos polígonos.',
+    topicIds: ['lp-ling-05', 'mat-20', 'mat-21', 'mat-22']
   },
   {
     day: 8,
-    title: 'Dia 8: Consolidação e Treino Ativo',
-    subtitle: 'Revisão ativa de interpretação de textos, aritmética básica e resolução de questões de vestibulares anteriores.',
-    topicIds: []
+    title: 'Dia 8: Sintaxe, Triângulos & Relações Métricas',
+    subtitle: 'Concordância, regência, elementos do triângulo, semelhança e Teorema de Pitágoras.',
+    topicIds: ['lp-ling-06', 'mat-23', 'mat-24', 'mat-25']
   },
   {
     day: 9,
-    title: 'Dia 9: Classes de Palavras & Razão/Proporção',
-    subtitle: 'Uso de substantivo, adjetivo, pronome e conceitos de proporção.',
-    topicIds: ['lp-ling-03', 'mat-08']
+    title: 'Dia 9: Ortografia & Trigonometria Plana',
+    subtitle: 'Novo acordo ortográfico, relações trigonométricas e resoluções no triângulo retângulo e triângulos quaisquer.',
+    topicIds: ['lp-ling-07', 'mat-26', 'mat-27']
   },
   {
     day: 10,
-    title: 'Dia 10: Partilha Proporcional & Regra de Três',
-    subtitle: 'Divisão direta/inversa e regra de três simples/composta.',
-    topicIds: ['mat-09', 'mat-10']
-  },
-  {
-    day: 11,
-    title: 'Dia 11: Conectivos & Porcentagem',
-    subtitle: 'Orações coordenadas/subordinadas e problemas com porcentagens.',
-    topicIds: ['lp-ling-04', 'mat-11']
-  },
-  {
-    day: 12,
-    title: 'Dia 12: Médias Estatísticas & Polinômios',
-    subtitle: 'Médias aritmética/ponderada e valor numérico de polinômios.',
-    topicIds: ['mat-12', 'mat-13']
-  },
-  {
-    day: 13,
-    title: 'Dia 13: Produtos Notáveis & Fatoração',
-    subtitle: 'Identidades algébricas, quadrado da soma e casos de fatoração de polinômios.',
-    topicIds: ['mat-14', 'mat-15']
-  },
-  {
-    day: 14,
-    title: 'Dia 14: Simplificação Radicial & Equações',
-    subtitle: 'Propriedades de radiciação e equações do 1º e 2º graus.',
-    topicIds: ['mat-16', 'mat-17']
-  },
-  {
-    day: 15,
-    title: 'Dia 15: Simulado e Revisão Intermediária',
-    subtitle: 'Dia focado em preencher lacunas de aprendizagem de álgebra e classes gramaticais.',
-    topicIds: []
-  },
-  {
-    day: 16,
-    title: 'Dia 16: Sistemas de Equações',
-    subtitle: 'Resolução de sistemas lineares do 1º e 2º grau por métodos de substituição e adição.',
-    topicIds: ['mat-18', 'mat-19']
-  },
-  {
-    day: 17,
-    title: 'Dia 17: Uso da Vírgula & Ângulos Geométricos',
-    subtitle: 'Regras essenciais de pontuação, ângulos, conceitos e classificações planas.',
-    topicIds: ['lp-ling-05', 'mat-20']
-  },
-  {
-    day: 18,
-    title: 'Dia 18: Problemas com Ângulo & Polígonos',
-    subtitle: 'Retas paralelas cortadas por transversal e diagonais de polígonos.',
-    topicIds: ['mat-21', 'mat-22']
-  },
-  {
-    day: 19,
-    title: 'Dia 19: Triângulos & Elementos Notáveis',
-    subtitle: 'Lei angular de Tales, classificação de triângulos e semelhança de triângulos.',
-    topicIds: ['mat-23', 'mat-24']
-  },
-  {
-    day: 20,
-    title: 'Dia 20: Teorema de Pitágoras & Projeções',
-    subtitle: 'Relações métricas fundamentais no triângulo retângulo.',
-    topicIds: ['mat-25']
-  },
-  {
-    day: 21,
-    title: 'Dia 21: Concordância, Regência & Trigonometria',
-    subtitle: 'Regras de concordância nominal/verbal, regência, seno, cosseno e tangente no triângulo retângulo.',
-    topicIds: ['lp-ling-06', 'mat-26']
-  },
-  {
-    day: 22,
-    title: 'Dia 22: Triângulos Quaisquer & Polígonos Inscritos',
-    subtitle: 'Leis dos Senos e Cossenos, apótemas e perímetros em círculos.',
-    topicIds: ['mat-27', 'mat-28']
-  },
-  {
-    day: 23,
-    title: 'Dia 23: Ortografia Oficial & Áreas Planas',
-    subtitle: 'Novo acordo ortográfico, acentuação, uso do hífen e áreas de figuras geométricas planas.',
-    topicIds: ['lp-ling-07', 'mat-29']
-  },
-  {
-    day: 24,
-    title: 'Dia 24: Círculo e Circunferência',
-    subtitle: 'Arcos, ângulos centrais, inscritos, excêntricos e de segmentos.',
-    topicIds: ['mat-30']
-  },
-  {
-    day: 25,
-    title: 'Dia 25: Revisão de Geometria e Relações Trigonométricas',
-    subtitle: 'Resolução em massa de exercícios de áreas, triângulos e circunferência.',
-    topicIds: []
-  },
-  {
-    day: 26,
-    title: 'Dia 26: Simulado Eletrônico Completo 1',
-    subtitle: 'Simule as condições reais de prova com 20 questões em 60 minutos.',
-    topicIds: []
-  },
-  {
-    day: 27,
-    title: 'Dia 27: Análise Detalhada de Erros',
-    subtitle: 'Mapeamento de pontos de dificuldade e revisão com o Tutor IA.',
-    topicIds: []
-  },
-  {
-    day: 28,
-    title: 'Dia 28: Prática de Questões IAUPE',
-    subtitle: 'Resolução focada no modelo de formulação da banca oficial dos processos da ETE PE.',
-    topicIds: []
-  },
-  {
-    day: 29,
-    title: 'Dia 29: Memorização Rápida de Fórmulas e Regras',
-    subtitle: 'Revisão ativa de regras gramaticais e fórmulas de geometria plana.',
-    topicIds: []
-  },
-  {
-    day: 30,
-    title: 'Dia 30: Preparação de Véspera e Controle de Tempo',
-    subtitle: 'Dicas de estratégia de prova, controle emocional e logística para o dia do exame.',
-    topicIds: []
+    title: 'Dia 10: Circunferência, Áreas Planas & Revisão de Véspera',
+    subtitle: 'Comprimento e área do círculo, áreas de figuras planas, ângulos na circunferência e dicas estratégicas.',
+    topicIds: ['mat-28', 'mat-29', 'mat-30']
   }
 ];
 
