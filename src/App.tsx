@@ -342,9 +342,13 @@ export default function App() {
           isSidebarCollapsed ? 'md:ml-16' : 'md:ml-60'
         }`}>
           <div className="max-w-5xl mx-auto w-full px-4 md:px-8 py-4 md:py-6">
-            <div className={activeTab === 'dashboard' ? 'page-enter' : 'hidden'}>
-              <Dashboard topics={topics} onTabChange={handleTabChange} />
-            </div>
+            {/* Dashboard é montado só quando ativo: evita o gráfico (recharts) medir
+                0×0 enquanto escondido e re-renderizar a cada tick do countdown. */}
+            {activeTab === 'dashboard' && (
+              <div className="page-enter">
+                <Dashboard topics={topics} onTabChange={handleTabChange} />
+              </div>
+            )}
             <div className={activeTab === 'edital' ? 'page-enter' : 'hidden'}>
               <SyllabusTracker topics={topics} onUpdateTopic={handleUpdateTopic} onImportData={handleImportSyllabusData} />
             </div>
