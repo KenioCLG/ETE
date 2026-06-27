@@ -149,7 +149,9 @@ export default function MockExam() {
   };
 
   const handleStartExam = () => {
-    startExamState(MOCK_EXAM_QUESTIONS, false);
+    // Embaralha as questões para que não apareçam na mesma ordem
+    const shuffled = [...MOCK_EXAM_QUESTIONS].sort(() => Math.random() - 0.5);
+    startExamState(shuffled, false);
   };
 
   const handleStartCustomExam = async () => {

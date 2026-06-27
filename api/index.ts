@@ -180,6 +180,10 @@ Cada questão: enunciado claro e 5 alternativas (A-E), apenas 1 correta. Inclua 
 
 // ── GET /api/generate-simulado ────────────────────────────────────────────────
 app.get("/api/generate-simulado", async (_req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   if (!isAiConfigured()) {
     return res.json({ questions: getFallbackSimulado(), isFallback: true });
   }
@@ -231,7 +235,7 @@ Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explica�
     });
 
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("AI_TIMEOUT")), 45000)
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 9000)
     );
 
     const response = await Promise.race([aiPromise, timeoutPromise]) as any;
