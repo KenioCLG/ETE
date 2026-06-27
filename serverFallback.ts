@@ -21,6 +21,7 @@ export interface FallbackQuestion {
   answerIndex: number;
   explanation: string;
   weight?: number; // 1 to 10 based on exam frequency
+  subject?: "Língua Portuguesa" | "Matemática"; // necessário para o front-end separar as abas
 }
 
 function weightedSample(pool: FallbackQuestion[], count: number): FallbackQuestion[] {
@@ -363,9 +364,14 @@ export function getFallbackSimulado(): FallbackQuestion[] {
     matSelected.push({ ...q, question: `[Prática Extra] ${q.question}` });
   }
 
-  // Embaralha alternativas e a ordem das questões dentro de cada disciplina.
-  const port = shuffle(portSelected).map(shuffleOptions);
-  const mat = shuffle(matSelected).map(shuffleOptions);
+  // Embaralha alternativas e a ordem das questões dentro de cada disciplina,
+  // e etiqueta a disciplina (o front-end usa q.subject para montar as abas).
+  const port = shuffle(portSelected)
+    .map(shuffleOptions)
+    .map((q): FallbackQuestion => ({ ...q, subject: "Língua Portuguesa" }));
+  const mat = shuffle(matSelected)
+    .map(shuffleOptions)
+    .map((q): FallbackQuestion => ({ ...q, subject: "Matemática" }));
 
   return [...port, ...mat];
 }

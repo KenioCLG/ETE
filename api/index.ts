@@ -206,7 +206,8 @@ ${editalMat}
 Vá além do básico: crie textos-base curtos inéditos para português e problemas matemáticos com cenários novos (nomes diferentes, valores diferentes, contextos criativos).
 Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explicação detalhada.`;
 
-    const response = await getAiClient().models.generateContent({
+    // Promise.race to enforce a 45-second timeout on Gemini so Vercel (60s limit) doesn't kill us
+    const aiPromise = getAiClient().models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
       config: {
@@ -228,6 +229,12 @@ Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explica�
         },
       },
     });
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 45000)
+    );
+
+    const response = await Promise.race([aiPromise, timeoutPromise]) as any;
 
     if (!response.text) throw new Error("Resposta vazia.");
     // We add unique IDs to the questions

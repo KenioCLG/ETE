@@ -309,6 +309,44 @@ Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explica�
     }
   });
 
+  // API endpoint: Gera laudo pedagógico da IA a partir do resultado do simulado
+  app.post("/api/evaluate-simulado", async (req, res) => {
+    const { results, userNote } = req.body;
+    if (!results) {
+      return res.status(400).json({ error: "Faltando parâmetro: 'results'." });
+    }
+
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
+      return res.json({
+        feedback: "Chave de API não configurada. Configure a GEMINI_API_KEY no .env para receber o laudo pedagógico automático da IA.",
+      });
+    }
+
+    try {
+      const prompt = `Você é um Tutor da ETE PE. Analise o simulado do aluno:
+Placar: Português (${results.scorePort}/${results.totalPort}), Matemática (${results.scoreMat}/${results.totalMat}).
+Observação do aluno: "${userNote || 'Nenhuma'}"
+
+Aqui estão as questões que o aluno errou (se houver):
+${results.wrongQuestions && results.wrongQuestions.length > 0
+  ? results.wrongQuestions.map((q: any) => `- [${q.subject}] ${q.question}`).join('\n')
+  : "Nenhuma, o aluno gabaritou!"}
+
+Por favor, dê um feedback pedagógico e conselhos sobre quais tópicos ele deve focar mais, com base nos erros e na observação. Seja direto, encorajador e use formatação Markdown.`;
+
+      const client = getAiClient();
+      const response = await client.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      res.json({ feedback: response.text || "Feedback indisponível no momento." });
+    } catch (error: any) {
+      console.warn("Erro ao gerar laudo pedagógico:", error.message || error);
+      res.status(500).json({ error: "Falha ao gerar feedback." });
+    }
+  });
+
   // ─── TEC CONCURSOS PROXY ENDPOINTS ───
 
   // Status: verifica se o cookie do Tec Concursos esta configurado
