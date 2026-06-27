@@ -912,11 +912,6 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                       className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-[10px] font-bold py-1.5 rounded-lg shadow-sm transition"
                     >
                       +30m
-                    </button>
-                    <button 
-                      onClick={() => handleQuickAddMinutes(topic, 60)}
-                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-[10px] font-bold py-1.5 rounded-lg shadow-sm transition"
-                    >
                       +1h
                     </button>
                   </div>
@@ -925,31 +920,37 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
             )}
 
             {/* AI Assistance Action block */}
-            <div className="bg-gold/5 text-dark-text rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-gold/15 shadow-inner">
-              <div className="space-y-1">
-                <h4 className="font-serif italic text-gold text-sm flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-gold animate-pulse" />
+            <div className="relative group bg-gradient-to-br from-gold/15 via-dark-card to-dark-bg text-dark-text rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-gold/20 shadow-lg hover:shadow-gold/10 hover:border-gold/40 transition-all duration-300 overflow-hidden">
+              {/* Subtle animated background glow */}
+              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl blur-xl"></div>
+              
+              <div className="relative space-y-2 z-10 flex-1 min-w-0">
+                <h4 className="font-serif italic text-gold text-sm flex items-center gap-2 drop-shadow-md">
+                  <span className="relative flex h-2.5 w-2.5 mr-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gold"></span>
+                  </span>
                   Tutor Virtual ETE PE
                 </h4>
-                <p className="text-dark-muted text-xs">
-                  Utilize a inteligência artificial para dominar regras gramaticais e fórmulas passo a passo.
+                <p className="text-dark-text/80 text-xs leading-relaxed max-w-sm">
+                  Utilize a <span className="font-semibold text-gold/90">inteligência artificial</span> para dominar regras gramaticais e fórmulas passo a passo.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 self-stretch md:self-auto">
+              <div className="relative flex flex-col sm:flex-row items-center gap-3 self-stretch md:self-auto md:shrink-0 z-10 w-full md:w-auto mt-2 md:mt-0">
                 <button
                   disabled={aiLoadingTopicId !== null}
                   onClick={() => handleExplainWithAI(topic)}
-                  className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg shadow-sm border transition duration-200 ${
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md border transition-all duration-300 transform hover:-translate-y-0.5 ${
                     hasExplanation 
-                      ? 'bg-rose-950/25 text-rose-300 border-rose-900/50 hover:bg-rose-950/40' 
-                      : 'bg-gold hover:bg-gold-hover text-dark-bg border-gold'
+                      ? 'bg-rose-950/30 text-rose-300 border-rose-900/60 hover:bg-rose-950/50 hover:border-rose-400/50 hover:shadow-rose-900/20' 
+                      : 'bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-dark-bg border-transparent hover:shadow-gold/30'
                   }`}
                 >
                   {aiLoadingTopicId === topic.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-4 h-4" />
                   )}
                   <span>{hasExplanation ? 'Fechar Explicação' : 'Explicar com IA'}</span>
                 </button>
@@ -957,16 +958,16 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                 <button
                   disabled={aiLoadingTopicId !== null}
                   onClick={() => handleQuizWithAI(topic)}
-                  className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg shadow-sm border transition duration-200 ${
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md border transition-all duration-300 transform hover:-translate-y-0.5 ${
                     hasQuiz 
-                      ? 'bg-dark-bg text-dark-text border-dark-border hover:bg-dark-card' 
-                      : 'bg-dark-bg hover:bg-dark-card text-gold border-gold/20'
+                      ? 'bg-dark-bg/80 text-dark-text border-dark-border hover:bg-dark-card hover:border-dark-text/50' 
+                      : 'bg-dark-card hover:bg-dark-bg text-gold border-gold/30 hover:border-gold/60 hover:shadow-gold/20'
                   }`}
                 >
                   {aiLoadingTopicId === topic.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Play className="w-3.5 h-3.5" />
+                    <Play className="w-4 h-4" />
                   )}
                   <span>{hasQuiz ? 'Fechar Prática' : 'Gerar Questões IA'}</span>
                 </button>
@@ -975,16 +976,16 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                   <button
                     disabled={tecLoading !== null || aiLoadingTopicId !== null}
                     onClick={() => handleTecQuiz(topic)}
-                    className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg shadow-sm border transition duration-200 ${
+                    className={`w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md border transition-all duration-300 transform hover:-translate-y-0.5 ${
                       hasTecQuiz
-                        ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/30 hover:bg-emerald-950/30'
-                        : 'bg-dark-bg hover:bg-dark-card text-emerald-400 border-emerald-900/20'
+                        ? 'bg-emerald-950/30 text-emerald-300 border-emerald-900/60 hover:bg-emerald-950/50'
+                        : 'bg-dark-card hover:bg-dark-bg text-emerald-400 border-emerald-900/40 hover:border-emerald-500/60 hover:shadow-emerald-900/20'
                     }`}
                   >
                     {tecLoading === topic.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <GraduationCap className="w-3.5 h-3.5" />
+                      <GraduationCap className="w-4 h-4" />
                     )}
                     <span>{hasTecQuiz ? 'Fechar TecConcursos' : 'TecConcursos'}</span>
                   </button>
