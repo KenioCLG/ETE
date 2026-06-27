@@ -31,7 +31,8 @@ html {
 body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  overscroll-behavior-y: auto;
+  /* Pull-to-refresh próprio assume o controle: desativa o nativo do navegador */
+  overscroll-behavior-y: contain;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -25,8 +25,8 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ topics, onTabChange }: DashboardProps) {
-  const [countdownReg, setCountdownReg] = useState({ days: 0, hours: 0, minutes: 0 });
-  const [countdownExam, setCountdownExam] = useState({ days: 0, hours: 0, minutes: 0 });
+  const [countdownReg, setCountdownReg] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [countdownExam, setCountdownExam] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [streak, setStreak] = useState(1);
 
   // Load streak
@@ -42,11 +42,11 @@ export default function Dashboard({ topics, onTabChange }: DashboardProps) {
   // Countdown calculations
   useEffect(() => {
     const calculateCountdowns = () => {
-      const now = new Date('2026-06-26T15:20:13-07:00').getTime(); // Using additional metadata lock-in time
+      const now = new Date().getTime();
       
       // Registration end: July 2nd, 2026
-      const regEnd = new Date('2026-07-02T23:59:59').getTime();
-      const examStart = new Date('2026-07-06T08:00:00').getTime();
+      const regEnd = new Date('2026-07-02T23:59:59-03:00').getTime();
+      const examStart = new Date('2026-07-06T08:00:00-03:00').getTime();
 
       const diffReg = regEnd - now;
       const diffExam = examStart - now;
@@ -56,9 +56,10 @@ export default function Dashboard({ topics, onTabChange }: DashboardProps) {
           days: Math.floor(diffReg / (1000 * 60 * 60 * 24)),
           hours: Math.floor((diffReg % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
           minutes: Math.floor((diffReg % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((diffReg % (1000 * 60)) / 1000),
         });
       } else {
-        setCountdownReg({ days: 0, hours: 0, minutes: 0 });
+        setCountdownReg({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
 
       if (diffExam > 0) {
@@ -66,14 +67,15 @@ export default function Dashboard({ topics, onTabChange }: DashboardProps) {
           days: Math.floor(diffExam / (1000 * 60 * 60 * 24)),
           hours: Math.floor((diffExam % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
           minutes: Math.floor((diffExam % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((diffExam % (1000 * 60)) / 1000),
         });
       } else {
-        setCountdownExam({ days: 0, hours: 0, minutes: 0 });
+        setCountdownExam({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
     calculateCountdowns();
-    const interval = setInterval(calculateCountdowns, 60000);
+    const interval = setInterval(calculateCountdowns, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -179,10 +181,12 @@ export default function Dashboard({ topics, onTabChange }: DashboardProps) {
             <p className="text-xs text-dark-muted">Gratuito via educacao.pe.gov.br</p>
           </div>
           <div className="flex items-center gap-1.5 bg-gold/10 text-gold px-3 py-2 rounded-lg font-mono text-xs font-semibold border border-gold/15">
-            {countdownReg.days > 0 ? (
+            {countdownReg.days > 0 || countdownReg.hours > 0 || countdownReg.minutes > 0 || countdownReg.seconds > 0 ? (
               <>
-                <span className="text-sm font-bold">{countdownReg.days}</span><span>d</span>
-                <span className="text-sm font-bold ml-1">{countdownReg.hours}</span><span>h</span>
+                <span className="text-sm font-bold">{String(countdownReg.days).padStart(2, '0')}</span><span>d</span>
+                <span className="text-sm font-bold ml-1">{String(countdownReg.hours).padStart(2, '0')}</span><span>h</span>
+                <span className="text-sm font-bold ml-1">{String(countdownReg.minutes).padStart(2, '0')}</span><span>m</span>
+                <span className="text-sm font-bold ml-1">{String(countdownReg.seconds).padStart(2, '0')}</span><span>s</span>
               </>
             ) : (
               <span className="text-[10px] uppercase tracking-wider">Encerradas</span>
@@ -201,10 +205,12 @@ export default function Dashboard({ topics, onTabChange }: DashboardProps) {
             <p className="text-xs text-dark-muted">Formato eletrônico presencial</p>
           </div>
           <div className="flex items-center gap-1.5 bg-rose-950/20 text-rose-400 px-3 py-2 rounded-lg font-mono text-xs font-semibold border border-rose-900/30">
-            {countdownExam.days > 0 ? (
+            {countdownExam.days > 0 || countdownExam.hours > 0 || countdownExam.minutes > 0 || countdownExam.seconds > 0 ? (
               <>
-                <span className="text-sm font-bold">{countdownExam.days}</span><span>d</span>
-                <span className="text-sm font-bold ml-1">{countdownExam.hours}</span><span>h</span>
+                <span className="text-sm font-bold">{String(countdownExam.days).padStart(2, '0')}</span><span>d</span>
+                <span className="text-sm font-bold ml-1">{String(countdownExam.hours).padStart(2, '0')}</span><span>h</span>
+                <span className="text-sm font-bold ml-1">{String(countdownExam.minutes).padStart(2, '0')}</span><span>m</span>
+                <span className="text-sm font-bold ml-1">{String(countdownExam.seconds).padStart(2, '0')}</span><span>s</span>
               </>
             ) : (
               <span className="text-[10px] uppercase tracking-wider">Em Andamento</span>

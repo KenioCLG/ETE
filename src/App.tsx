@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard';
 import SyllabusTracker from './components/SyllabusTracker';
 import MockExam from './components/MockExam';
 import AIAssistant from './components/AIAssistant';
+import PullToRefresh from './components/PullToRefresh';
 import {
   LayoutDashboard,
   BookMarked,
@@ -164,6 +165,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col font-sans text-dark-text antialiased">
+
+      {/* Pull-to-refresh com spinner próprio (mobile) */}
+      <PullToRefresh />
 
       {/* ── Glass Header ─────────────────────────────────────────────────── */}
       <header className="glass-header sticky top-0 z-50 relative">
