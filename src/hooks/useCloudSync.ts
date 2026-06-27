@@ -16,7 +16,19 @@ export function useCloudSync() {
     return state;
   };
 
-  const getSnapshotString = () => JSON.stringify(getLocalStateSnapshot());
+  // Hash canônico: ordena as chaves para que a comparação não dependa da
+  // ordem do localStorage nem do round-trip pelo Redis (evita falsos "diferente").
+  const canonical = (obj: Record<string, string>) =>
+    JSON.stringify(
+      Object.keys(obj)
+        .sort()
+        .reduce((acc, k) => {
+          acc[k] = obj[k];
+          return acc;
+        }, {} as Record<string, string>)
+    );
+
+  const getSnapshotString = () => canonical(getLocalStateSnapshot());
 
   const pushToCloud = useCallback(async (force = false) => {
     const currentHash = getSnapshotString();
@@ -57,25 +69,32 @@ export function useCloudSync() {
       }
       
       const { data } = await res.json();
-      
+
       if (data && Object.keys(data).length > 0) {
-        // Compare with local. If cloud has data, we overwrite local and force reload.
-        const cloudHash = JSON.stringify(data);
+        // Compara de forma canônica (ordem das chaves não importa).
+        const cloudHash = canonical(data as Record<string, string>);
         const localHash = getSnapshotString();
-        
+
         if (cloudHash !== localHash) {
-          // Cloud is different, apply it!
+          // Nuvem é diferente: aplica no localStorage.
           Object.entries(data).forEach(([key, value]) => {
             localStorage.setItem(key, value as string);
           });
           lastSyncHash.current = cloudHash;
-          
-          // Force a reload so all components pick up the new localStorage values
-          window.location.reload();
-          return;
+
+          // Recarrega no MÁXIMO uma vez por sessão para os componentes lerem o
+          // novo localStorage — a trava impede o loop infinito de F5.
+          if (!sessionStorage.getItem('ete_cloud_reloaded')) {
+            sessionStorage.setItem('ete_cloud_reloaded', '1');
+            window.location.reload();
+            return;
+          }
+        } else {
+          // Já está em sincronia: marca o hash para o push periódico não disparar à toa.
+          lastSyncHash.current = cloudHash;
         }
       }
-      
+
       setSyncStatus('synced');
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (err) {
