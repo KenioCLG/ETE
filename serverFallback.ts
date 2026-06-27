@@ -1,7 +1,7 @@
 // Fallback Question Bank for ETE Subsequente
 // This ensures that even if the Gemini API is unavailable (e.g., 503 error), the user can always generate high-quality, relevant study questions.
 
-import { INITIAL_SYLLABUS } from "./src/data/syllabus";
+import { INITIAL_SYLLABUS } from "./src/data/syllabus.js";
 
 // Extrai os temas oficiais do edital (a "fonte da verdade" do conteúdo da prova),
 // separados por disciplina, para ancorar a geração de questões pela IA.

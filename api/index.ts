@@ -1,14 +1,14 @@
 export const maxDuration = 60;
 import express from "express";
 import { GoogleGenAI, Type } from "@google/genai";
-import { getFallbackQuestions, getFallbackSimulado, getRandomEditalTopics } from "../serverFallback";
+import { getFallbackQuestions, getFallbackSimulado, getRandomEditalTopics } from "../serverFallback.js";
 import {
   isTecConfigured,
   buscarQuestoesPorAssunto,
   buscarQuestoesSimulado,
   listarMaterias,
   listarAssuntos,
-} from "../tecConcursos";
+} from "../tecConcursos.js";
 
 // ─── Fallback local para /api/explain ────────────────────────────────────────
 

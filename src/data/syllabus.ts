@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SyllabusTopic, EditalMilestone } from '../types';
+import type { SyllabusTopic, EditalMilestone } from '../types';
 
 export const INITIAL_SYLLABUS: SyllabusTopic[] = [
   // LÍNGUA PORTUGUESA - COMPREENSÃO E INTERPRETAÇÃO DE TEXTOS
