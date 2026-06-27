@@ -1,7 +1,7 @@
 export const maxDuration = 60;
 import express from "express";
 import { GoogleGenAI, Type } from "@google/genai";
-import { getFallbackQuestions, getFallbackSimulado, getEditalTopics } from "../serverFallback";
+import { getFallbackQuestions, getFallbackSimulado, getRandomEditalTopics } from "../serverFallback";
 import {
   isTecConfigured,
   buscarQuestoesPorAssunto,
@@ -186,21 +186,21 @@ app.get("/api/generate-simulado", async (_req, res) => {
 
   try {
     const randomSeed = Math.floor(Math.random() * 1000000);
-    const { port: editalPort, mat: editalMat } = getEditalTopics();
+    const { port: editalPort, mat: editalMat } = getRandomEditalTopics(5);
     const prompt = `Gere um simulado completo para a prova ETE PE (Escola Técnica Estadual de Pernambuco - modalidade subsequente).
-Seed de Variância: ${randomSeed} (CRÍTICO: Use este número para garantir que as questões sejam 100% INÉDITAS e diferentes de qualquer outro simulado gerado anteriormente).
+Seed de Variância: ${randomSeed} (CRÍTICO: Use este número para garantir que as questões sejam 100% INÉDITAS).
 
 O simulado deve conter exatamente 20 questões de múltipla escolha inéditas e de alto nível:
 - As 10 primeiras questões DEVEM ser de "Língua Portuguesa"
 - As 10 últimas questões DEVEM ser de "Matemática"
 
-REGRA OBRIGATÓRIA DE CONTEÚDO: as questões DEVEM cobrir EXCLUSIVAMENTE os temas do edital oficial listados abaixo. Não invente assuntos fora desta lista.
-A cada simulado, sorteie um subconjunto VARIADO destes temas, priorizando (por maior frequência nas provas anteriores da banca) Interpretação de Texto, Concordância/Regência/Crase, Ortografia/Pontuação em Português; e Porcentagem, Regra de Três, Equações/Sistemas, Áreas e Geometria em Matemática — sem nunca repetir o mesmo conjunto de questões de simulados anteriores.
+REGRA OBRIGATÓRIA DE CONTEÚDO: Para GARANTIR A VARIEDADE e não repetir questões de simulados anteriores, eu SORTEEI 5 temas específicos de cada matéria do edital.
+Você DEVE criar as 20 questões (2 de cada tema) EXCLUSIVAMENTE focadas nestes assuntos exatos listados abaixo:
 
-TEMAS DE LÍNGUA PORTUGUESA (edital oficial):
+TEMAS SORTEADOS DE LÍNGUA PORTUGUESA:
 ${editalPort}
 
-TEMAS DE MATEMÁTICA (edital oficial):
+TEMAS SORTEADOS DE MATEMÁTICA:
 ${editalMat}
 
 Vá além do básico: crie textos-base curtos inéditos para português e problemas matemáticos com cenários novos (nomes diferentes, valores diferentes, contextos criativos).

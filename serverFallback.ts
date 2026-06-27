@@ -15,6 +15,16 @@ export function getEditalTopics(): { port: string; mat: string } {
   return { port, mat };
 }
 
+export function getRandomEditalTopics(count: number = 5): { port: string; mat: string } {
+  const portTopics = INITIAL_SYLLABUS.filter((t) => t.subject === "Língua Portuguesa");
+  const matTopics = INITIAL_SYLLABUS.filter((t) => t.subject === "Matemática");
+  
+  const port = shuffle(portTopics).slice(0, count).map(t => `- ${t.title}`).join("\n");
+  const mat = shuffle(matTopics).slice(0, count).map(t => `- ${t.title}`).join("\n");
+  
+  return { port, mat };
+}
+
 export interface FallbackQuestion {
   question: string;
   options: string[];
