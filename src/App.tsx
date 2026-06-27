@@ -22,7 +22,11 @@ import {
   GraduationCap,
   ChevronLeft,
   ChevronRight,
+  CheckCircle,
+  XCircle,
+  Loader2,
 } from 'lucide-react';
+import { useCloudSync } from './hooks/useCloudSync';
 
 // ─── PWA Install Prompt ──────────────────────────────────────────────────────
 interface BeforeInstallPromptEvent extends Event {
@@ -39,6 +43,7 @@ const NAV_ITEMS = [
 ];
 
 export default function App() {
+  const { syncStatus } = useCloudSync();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [prevTab, setPrevTab] = useState<string>('dashboard');
   const [topics, setTopics] = useState<SyllabusTopic[]>([]);
@@ -209,10 +214,15 @@ export default function App() {
               )}
             </div>
 
-            {/* Auto-save badge — md+ */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-dark-card border border-dark-border">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-semibold text-dark-muted">Salvo</span>
+            {/* Cloud Sync badge — md+ */}
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-dark-card border border-dark-border transition-all duration-300">
+              {syncStatus === 'syncing' && <Loader2 className="w-3 h-3 text-gold animate-spin" />}
+              {syncStatus === 'synced' && <CheckCircle className="w-3 h-3 text-emerald-400" />}
+              {syncStatus === 'error' && <XCircle className="w-3 h-3 text-rose-400" />}
+              {syncStatus === 'idle' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+              <span className="text-[10px] font-semibold text-dark-muted">
+                {syncStatus === 'syncing' ? 'Sincronizando...' : syncStatus === 'error' ? 'Erro ao Salvar' : 'Salvo na Nuvem'}
+              </span>
             </div>
 
             {/* Install PWA button */}

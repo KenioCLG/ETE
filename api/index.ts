@@ -1,5 +1,6 @@
 export const maxDuration = 60;
 import express from "express";
+import { Redis } from "@upstash/redis";
 import { GoogleGenAI, Type } from "@google/genai";
 import { getFallbackQuestions, getFallbackSimulado, getRandomEditalTopics } from "../serverFallback.js";
 import {
@@ -400,6 +401,39 @@ Seja conciso mas completo.`,
     return res.json({
       explanation: `Gabarito: Alternativa ${letras[gabaritoIndex] || "?"}. Explicação indisponível.`,
     });
+  }
+});
+
+// ── SYNC (NUVEM) ─────────────────────────────────────────────────────────────
+const getRedis = () => {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    return new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    });
+  }
+  return null;
+};
+
+app.get("/api/sync", async (_req, res) => {
+  const redis = getRedis();
+  if (!redis) return res.status(503).json({ error: "Cloud sync not configured", notConfigured: true });
+  try {
+    const data = await redis.get("ete_app_state_v1");
+    return res.json({ data: data || {} });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/sync", async (req, res) => {
+  const redis = getRedis();
+  if (!redis) return res.status(503).json({ error: "Cloud sync not configured", notConfigured: true });
+  try {
+    await redis.set("ete_app_state_v1", req.body.data);
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
