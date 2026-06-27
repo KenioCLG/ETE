@@ -8,21 +8,35 @@ import { SyllabusTopic } from './types';
 import { INITIAL_SYLLABUS } from './data/syllabus';
 import Dashboard from './components/Dashboard';
 import SyllabusTracker from './components/SyllabusTracker';
-import PomodoroTimer from './components/PomodoroTimer';
 import MockExam from './components/MockExam';
 import AIAssistant from './components/AIAssistant';
 import { 
   LayoutDashboard, 
   BookOpen, 
-  Clock, 
   FileText, 
   Sparkles, 
-  BookMarked
+  BookMarked,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [topics, setTopics] = useState<SyllabusTopic[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('ete_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('ete_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   // Load study progress state from localStorage on init
   useEffect(() => {
@@ -99,7 +113,6 @@ export default function App() {
   const navItems = [
     { id: 'dashboard', label: 'Painel', icon: LayoutDashboard },
     { id: 'edital', label: 'Edital & Progresso', icon: BookMarked },
-    { id: 'pomodoro', label: 'Pomodoro', icon: Clock },
     { id: 'simulado', label: 'Simulado ETE', icon: FileText },
     { id: 'tutor', label: 'Tutor IA', icon: Sparkles },
   ];
@@ -114,13 +127,6 @@ export default function App() {
             topics={topics} 
             onUpdateTopic={handleUpdateTopic} 
             onImportData={handleImportSyllabusData} 
-          />
-        );
-      case 'pomodoro':
-        return (
-          <PomodoroTimer 
-            topics={topics} 
-            onAddMinutes={handleAddMinutesToTopic} 
           />
         );
       case 'simulado':
@@ -166,11 +172,22 @@ export default function App() {
       {/* Main layout frame */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Left Sidebar Navigation for Desktop */}
-        <aside className="hidden md:block w-64 bg-dark-bg border-r border-dark-border p-4 space-y-6 sticky top-[61px] h-[calc(100vh-61px)] overflow-y-auto self-start">
+        <aside className={`hidden md:block bg-dark-bg border-r border-dark-border p-4 space-y-6 sticky top-[61px] h-[calc(100vh-61px)] overflow-y-auto self-start transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
           <div className="space-y-2">
-            <span className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block px-3">
-              Menu de Estudos
-            </span>
+            <div className="flex items-center justify-between px-1 mb-2">
+              {!sidebarCollapsed && (
+                <span className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">
+                  Menu de Estudos
+                </span>
+              )}
+              <button
+                onClick={toggleSidebar}
+                className={`p-1.5 rounded-lg bg-dark-card hover:bg-dark-card-lighter border border-dark-border text-dark-muted hover:text-gold transition duration-150 ${sidebarCollapsed ? 'mx-auto' : 'ml-auto'}`}
+                title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+              >
+                {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+              </button>
+            </div>
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -183,10 +200,11 @@ export default function App() {
                       isSelected 
                         ? 'bg-gold/15 text-gold border-gold/30 shadow-inner' 
                         : 'text-dark-muted hover:bg-dark-card-lighter hover:text-gold hover:border-dark-border'
-                    }`}
+                    } ${sidebarCollapsed ? 'justify-center px-2' : ''}`}
+                    title={sidebarCollapsed ? item.label : undefined}
                   >
                     <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-gold' : 'text-dark-muted'}`} />
-                    <span>{item.label}</span>
+                    {!sidebarCollapsed && <span>{item.label}</span>}
                   </button>
                 );
               })}
@@ -194,12 +212,14 @@ export default function App() {
           </div>
 
           {/* Quick study motto card */}
-          <div className="p-4 bg-gold/5 rounded-2xl border border-dark-border space-y-2 text-dark-text">
-            <h4 className="font-serif italic text-xs text-gold">Reta Final!</h4>
-            <p className="text-[10px] leading-relaxed text-dark-muted font-medium">
-              Siga o cronograma fielmente e garanta sua aprovação em uma das 54 Escolas Técnicas Estaduais de Pernambuco.
-            </p>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="p-4 bg-gold/5 rounded-2xl border border-dark-border space-y-2 text-dark-text">
+              <h4 className="font-serif italic text-xs text-gold">Reta Final!</h4>
+              <p className="text-[10px] leading-relaxed text-dark-muted font-medium">
+                Siga o cronograma fielmente e garanta sua aprovação em uma das 54 Escolas Técnicas Estaduais de Pernambuco.
+              </p>
+            </div>
+          )}
         </aside>
 
         {/* Content canvas container */}

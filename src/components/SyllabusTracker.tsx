@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SyllabusTopic, TopicStatus, SubjectType, QuizQuestion } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { 
@@ -22,7 +22,13 @@ import {
   X,
   Play,
   Youtube,
-  ExternalLink
+  ExternalLink,
+  Pause,
+  RotateCcw,
+  Coffee,
+  Volume2,
+  VolumeX,
+  Brain
 } from 'lucide-react';
 import { STUDY_RESOURCES } from '../data/studyResources';
 
@@ -114,6 +120,84 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
   const [aiQuizSubmitted, setAiQuizSubmitted] = useState<{ [topicId: string]: boolean }>({});
   const [aiError, setAiError] = useState<string | null>(null);
   const [customVideos, setCustomVideos] = useState<{ [topicId: string]: any[] }>({});
+
+  // Pomodoro States
+  const [pomoActive, setPomoActive] = useState<boolean>(false);
+  const [pomoTopicId, setPomoTopicId] = useState<string | null>(null);
+  const [pomoSecondsLeft, setPomoSecondsLeft] = useState<number>(25 * 60);
+  const [pomoMode, setPomoMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
+  const [pomoSecondsAccumulated, setPomoSecondsAccumulated] = useState<number>(0);
+  const [pomoSoundEnabled, setPomoSoundEnabled] = useState<boolean>(true);
+  const [studyParamsCollapsed, setStudyParamsCollapsed] = useState<boolean>(false);
+
+  const topicsRef = useRef(topics);
+  const onUpdateTopicRef = useRef(onUpdateTopic);
+
+  useEffect(() => {
+    topicsRef.current = topics;
+    onUpdateTopicRef.current = onUpdateTopic;
+  }, [topics, onUpdateTopic]);
+
+  // Play sound/speech alerts
+  const playPomoAlert = (text: string) => {
+    if (pomoSoundEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 1.1;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  useEffect(() => {
+    let timerId: any = null;
+    if (pomoActive && pomoTopicId) {
+      timerId = setInterval(() => {
+        setPomoSecondsLeft((prev) => {
+          // Track exact accumulated work seconds
+          if (pomoMode === 'work') {
+            setPomoSecondsAccumulated((acc) => {
+              const nextAcc = acc + 1;
+              if (nextAcc >= 60) {
+                // Find latest topic state from ref
+                const currentTopic = topicsRef.current.find(t => t.id === pomoTopicId);
+                if (currentTopic) {
+                  onUpdateTopicRef.current({
+                    ...currentTopic,
+                    minutes: currentTopic.minutes + 1
+                  });
+                }
+                return 0; // reset accumulated seconds
+              }
+              return nextAcc;
+            });
+          }
+
+          if (prev <= 1) {
+            clearInterval(timerId);
+            setPomoActive(false);
+            if (pomoMode === 'work') {
+              playPomoAlert("Foco concluído! Excelente estudo. Hora de descansar um pouco.");
+              setPomoMode('shortBreak');
+              setPomoSecondsAccumulated(0);
+              return 5 * 60;
+            } else {
+              playPomoAlert("Pausa concluída! Vamos voltar ao foco?");
+              setPomoMode('work');
+              setPomoSecondsAccumulated(0);
+              return 25 * 60;
+            }
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (timerId) clearInterval(timerId);
+    }
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [pomoActive, pomoTopicId, pomoMode, pomoSoundEnabled]);
 
   // Sync expanded topic redirected from TenDaySprint and load custom videos
   useEffect(() => {
@@ -379,78 +463,241 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
         {/* Expanded Detail Panel */}
         {isExpanded && (
           <div className="border-t border-dark-border p-5 bg-dark-card-lighter rounded-b-2xl space-y-6">
-            {/* Grid for parameters: status, confidence, logs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Status selection */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">Status do Estudo</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(['Não Iniciado', 'Teoria', 'Exercícios', 'Revisado'] as TopicStatus[]).map((st) => (
-                    <button
-                      key={st}
-                      onClick={() => handleStatusChange(topic, st)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold text-center transition duration-200 ${
-                        topic.status === st 
-                          ? 'bg-gold border-gold text-dark-bg font-bold shadow-md' 
-                          : 'bg-dark-card border-dark-border hover:bg-dark-bg text-dark-text'
-                      }`}
-                    >
-                      {st === 'Teoria' ? 'Teoria' : st === 'Não Iniciado' ? 'Início' : st}
-                    </button>
-                  ))}
-                </div>
+            {/* Header for collapsible study/pomodoro panel */}
+            <div className="flex items-center justify-between pb-1 border-b border-dark-border/40">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">
+                  Painel de Progresso & Pomodoro
+                </span>
+                {pomoActive && pomoTopicId === topic.id && (
+                  <span className="inline-flex items-center gap-1 bg-gold/10 text-gold text-[10px] px-2 py-0.5 rounded-full font-mono animate-pulse border border-gold/20">
+                    <Clock className="w-3 h-3" />
+                    Ativo: {Math.floor(pomoSecondsLeft / 60).toString().padStart(2, '0')}:${(pomoSecondsLeft % 60).toString().padStart(2, '0')}
+                  </span>
+                )}
               </div>
+              <button
+                onClick={() => setStudyParamsCollapsed(!studyParamsCollapsed)}
+                className="text-[10px] font-bold text-gold hover:text-gold-hover transition flex items-center gap-1 bg-dark-card border border-dark-border hover:bg-dark-card-lighter px-2.5 py-1 rounded-lg shadow-sm"
+              >
+                {studyParamsCollapsed ? (
+                  <>
+                    <ChevronDown className="w-3.5 h-3.5" /> Mostrar Painel de Estudos
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp className="w-3.5 h-3.5" /> Ocultar Painel para Espaço
+                  </>
+                )}
+              </button>
+            </div>
 
-              {/* Confidence stars */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">Nível de Confiança</label>
-                <div className="flex items-center gap-1 bg-dark-card border border-dark-border rounded-lg p-2.5 justify-around shadow-inner">
-                  {[1, 2, 3, 4, 5].map((val) => (
-                    <button
-                      key={val}
-                      onClick={() => handleConfidenceChange(topic, val)}
-                      className="p-1 hover:scale-110 transition duration-150"
-                    >
-                      <Star className={`w-6 h-6 ${
-                        topic.confidence >= val 
-                          ? 'text-gold fill-gold' 
-                          : 'text-dark-border'
-                      }`} />
-                    </button>
-                  ))}
+            {!studyParamsCollapsed && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Status selection */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">Status do Estudo</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(['Não Iniciado', 'Teoria', 'Exercícios', 'Revisado'] as TopicStatus[]).map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => handleStatusChange(topic, st)}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold text-center transition duration-200 ${
+                          topic.status === st 
+                            ? 'bg-gold border-gold text-dark-bg font-bold shadow-md' 
+                            : 'bg-dark-card border-dark-border hover:bg-dark-bg text-dark-text'
+                        }`}
+                      >
+                        {st === 'Teoria' ? 'Teoria' : st === 'Não Iniciado' ? 'Início' : st}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Log study minutes */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">Registrar Minutos Estudados</label>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5">
+                {/* Confidence stars */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">Nível de Confiança</label>
+                  <div className="flex items-center gap-1 bg-dark-card border border-dark-border rounded-lg p-2.5 justify-around shadow-inner">
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => handleConfidenceChange(topic, val)}
+                        className="p-1 hover:scale-110 transition duration-150"
+                      >
+                        <Star className={`w-6 h-6 ${
+                          topic.confidence >= val 
+                            ? 'text-gold fill-gold' 
+                            : 'text-dark-border'
+                        }`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Log study minutes / Pomodoro */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block">
+                      Pomodoro & Tempo de Estudo
+                    </label>
+                    <span className="text-[10px] text-dark-muted font-mono font-bold">
+                      Total: <span className="text-gold">{topic.minutes}m</span> ({ (topic.minutes / 60).toFixed(1) }h)
+                    </span>
+                  </div>
+
+                  {/* Integrated Pomodoro Widget */}
+                  <div className="bg-dark-card border border-dark-border rounded-xl p-3.5 space-y-3 shadow-inner">
+                    {/* Timer Display and Sound Switch */}
+                    <div className="flex items-center justify-between bg-dark-bg/40 px-3 py-2 rounded-lg border border-dark-border/40">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className={`w-3.5 h-3.5 text-gold ${pomoActive && pomoTopicId === topic.id ? 'pomo-pulse animate-pulse' : ''}`} />
+                        <span className="text-xs font-mono font-bold text-dark-text">
+                          {pomoTopicId === topic.id ? (
+                            `${Math.floor(pomoSecondsLeft / 60).toString().padStart(2, '0')}:${(pomoSecondsLeft % 60).toString().padStart(2, '0')}`
+                          ) : (
+                            "25:00"
+                          )}
+                        </span>
+                        <span className="text-[10px] text-dark-muted capitalize">
+                          {pomoTopicId === topic.id ? (
+                            pomoMode === 'work' ? '• foco' : '• pausa'
+                          ) : (
+                            '• pronto'
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Audio control button */}
+                      <button
+                        onClick={() => setPomoSoundEnabled(!pomoSoundEnabled)}
+                        className={`p-1 rounded transition ${pomoSoundEnabled ? 'text-gold' : 'text-dark-muted'}`}
+                        title={pomoSoundEnabled ? "Alertas de voz ativados" : "Alertas de voz desativados"}
+                      >
+                        {pomoSoundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+
+                    {/* Mini Mode Selector if timer not running */}
+                    {!(pomoActive && pomoTopicId === topic.id) && (
+                      <div className="flex gap-1.5 bg-dark-bg p-0.5 rounded-lg border border-dark-border/60">
+                        <button
+                          onClick={() => {
+                            setPomoTopicId(topic.id);
+                            setPomoMode('work');
+                            setPomoSecondsLeft(25 * 60);
+                            setPomoSecondsAccumulated(0);
+                          }}
+                          className={`flex-1 py-1 rounded text-[9px] font-bold transition ${
+                            pomoTopicId === topic.id && pomoMode === 'work'
+                              ? 'bg-gold text-dark-bg font-extrabold'
+                              : 'text-dark-muted hover:text-dark-text'
+                          }`}
+                        >
+                          Foco (25m)
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPomoTopicId(topic.id);
+                            setPomoMode('shortBreak');
+                            setPomoSecondsLeft(5 * 60);
+                            setPomoSecondsAccumulated(0);
+                          }}
+                          className={`flex-1 py-1 rounded text-[9px] font-bold transition ${
+                            pomoTopicId === topic.id && pomoMode === 'shortBreak'
+                              ? 'bg-gold text-dark-bg font-extrabold'
+                              : 'text-dark-muted hover:text-dark-text'
+                          }`}
+                        >
+                          Pausa (5m)
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Control Buttons */}
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => {
+                          if (pomoTopicId !== topic.id) {
+                            // Start brand new timer for this topic
+                            setPomoTopicId(topic.id);
+                            setPomoMode('work');
+                            setPomoSecondsLeft(25 * 60);
+                            setPomoSecondsAccumulated(0);
+                            setPomoActive(true);
+                            playPomoAlert("Iniciando foco de vinte e cinco minutos neste assunto.");
+                          } else {
+                            // Toggle existing timer
+                            if (!pomoActive) {
+                              playPomoAlert(pomoMode === 'work' ? "Bom estudo." : "Aproveite a pausa.");
+                            }
+                            setPomoActive(!pomoActive);
+                          }
+                        }}
+                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                          pomoActive && pomoTopicId === topic.id
+                            ? 'bg-[#e06c75] hover:bg-rose-500 text-dark-bg font-bold'
+                            : 'bg-gold hover:bg-gold-hover text-dark-bg font-bold'
+                        }`}
+                      >
+                        {pomoActive && pomoTopicId === topic.id ? (
+                          <>
+                            <Pause className="w-3.5 h-3.5" /> Pausar
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5" /> Iniciar Foco
+                          </>
+                        )}
+                      </button>
+
+                      {(pomoTopicId === topic.id) && (
+                        <button
+                          onClick={() => {
+                            setPomoActive(false);
+                            setPomoSecondsLeft(pomoMode === 'work' ? 25 * 60 : 5 * 60);
+                            setPomoSecondsAccumulated(0);
+                          }}
+                          className="p-2 bg-dark-bg border border-dark-border hover:bg-dark-card-lighter text-dark-muted hover:text-gold rounded-lg transition"
+                          title="Reiniciar"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Active Studying / Live Adding feedback */}
+                    {pomoTopicId === topic.id && pomoMode === 'work' && (
+                      <div className="text-[10px] text-center bg-gold/5 border border-gold/15 py-1.5 px-2 rounded-lg text-gold font-mono flex items-center justify-center gap-1.5">
+                        <Brain className="w-3 h-3 animate-bounce" />
+                        <span>Somando segundos ao vivo: <b>+{pomoSecondsAccumulated}s</b></span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Manual adjustments row */}
+                  <div className="flex items-center gap-1.5 pt-1">
                     <button 
                       onClick={() => handleQuickAddMinutes(topic, 15)}
-                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-xs font-bold py-2 rounded-lg shadow-sm transition"
+                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-[10px] font-bold py-1.5 rounded-lg shadow-sm transition"
                     >
-                      +15 min
+                      +15m
                     </button>
                     <button 
                       onClick={() => handleQuickAddMinutes(topic, 30)}
-                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-xs font-bold py-2 rounded-lg shadow-sm transition"
+                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-[10px] font-bold py-1.5 rounded-lg shadow-sm transition"
                     >
-                      +30 min
+                      +30m
                     </button>
                     <button 
                       onClick={() => handleQuickAddMinutes(topic, 60)}
-                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-xs font-bold py-2 rounded-lg shadow-sm transition"
+                      className="flex-1 bg-dark-card border border-dark-border hover:bg-dark-bg text-dark-text text-[10px] font-bold py-1.5 rounded-lg shadow-sm transition"
                     >
-                      +60 min
+                      +1h
                     </button>
-                  </div>
-                  <div className="text-[10px] text-dark-muted font-medium text-center font-mono">
-                    Acumulado: <span className="font-bold text-gold">{topic.minutes}m</span> ({ (topic.minutes / 60).toFixed(1) }h)
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* AI Assistance Action block */}
             <div className="bg-gold/5 text-dark-text rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-gold/15 shadow-inner">
@@ -587,7 +834,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                             isCorrect ? 'bg-emerald-950/20 border border-emerald-900/30 text-emerald-300' : 'bg-rose-950/20 border border-rose-900/30 text-rose-300'
                           }`}>
                             <div className="font-bold mb-1">
-                              {isCorrect ? '✓ Resposta Correta!' : '✗ Resposta Incorreta!'}
+                              {isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta!'}
                             </div>
                             <div className="text-dark-text opacity-90 leading-relaxed font-medium">{q.explanation}</div>
                           </div>
@@ -629,7 +876,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
             )}
 
             {/* Videoaulas & Questões Práticas (TecConcursos) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-5 border-t border-dark-border/70">
+            <div className="space-y-6 pt-5 border-t border-dark-border/70">
               {/* Column 1: Video Lessons Player & Selector */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -657,19 +904,19 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                       {/* Responsive iframe wrapper for 16:9 YouTube video player */}
                       <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-dark-border bg-black shadow-lg">
                         <iframe
-                          src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1&origin=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
+                          src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?rel=0`}
                           title={activeVid.title || "Videoaula"}
-                          frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           allowFullScreen
-                          referrerPolicy="strict-origin-when-cross-origin"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
                           className="absolute inset-0 w-full h-full"
                         ></iframe>
                       </div>
 
                       {/* Highly descriptive iframe browser security / cookie policy notice */}
                       <div className="text-[10px] text-dark-muted leading-relaxed bg-dark-bg/40 rounded-lg p-2.5 border border-dark-border/40">
-                        💡 <b>Dica de Reprodução:</b> Como esta aplicação roda dentro de uma pré-visualização, alguns navegadores (como Chrome ou Safari) podem bloquear o vídeo por segurança. Caso apareça uma tela preta ou erro, você pode abrir o vídeo diretamente no YouTube ou fazer uma busca rápida pelos botões abaixo!
+                        <b>Dica de Reprodução:</b> Como esta aplicacao roda dentro de uma pre-visualizacao, alguns navegadores (como Chrome ou Safari) podem bloquear o video por seguranca. Caso apareca uma tela preta ou erro, voce pode abrir o video diretamente no YouTube ou fazer uma busca rapida pelos botoes abaixo!
                       </div>
 
                       {/* YouTube embed fallback and direct link buttons */}
@@ -745,7 +992,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
               </div>
 
               {/* Column 2: TecConcursos Practice */}
-              <div className="space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] flex items-center gap-1.5">
@@ -992,7 +1239,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                           </span>
                           {dayProgressPercent === 100 && hasTopics && (
                             <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                              ✓ Conclído
+                              Concluido
                             </span>
                           )}
                           {!hasTopics && (

@@ -14,19 +14,19 @@ export interface StudyResource {
 }
 
 export const STUDY_RESOURCES: Record<string, StudyResource> = {
-  // LÍNGUA PORTUGUESA - COMPREENSÃO E INTERPRETAÇÃO DE TEXTOS
+  // LINGUA PORTUGUESA - COMPREENSAO E INTERPRETACAO DE TEXTOS
   'lp-comp-01': {
     tecQuery: 'Texto, contexto e interlocução',
     videos: [
       {
-        title: 'Interpretação de Texto para Concursos - Como Entender o Texto',
+        title: 'CNU | Compreensao de Textos',
         channel: 'Professor Noslen',
-        youtubeId: 'zN9W9rY38sU'
+        youtubeId: 'IYlsViWKZAA'
       },
       {
-        title: 'Compreensão x Interpretação de Texto - Diferenças Fundamentais',
+        title: 'COMO FAZER A INTERPRETACAO DE UM TEXTO? (Interpretacao para Concursos)',
         channel: 'Professora Pamba',
-        youtubeId: 'qgG_6N7o_A8'
+        youtubeId: '6mSmMK6Ksk8'
       }
     ]
   },
@@ -34,14 +34,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Coesão e Coerência textual',
     videos: [
       {
-        title: 'Coesão e Coerência Textual: O que é e Exercícios',
+        title: 'Coesao e Coerencia [Prof. Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'k34g6VfX8sQ'
+        youtubeId: 'IIU6i3UXyi0'
       },
       {
-        title: 'Elementos de Coesão Textual - Anáfora, Catáfora e Conectivos',
+        title: 'COESAO E COERENCIA: APRENDA AGORA - Aula 15 - Profa. Pamba',
         channel: 'Professora Pamba',
-        youtubeId: 'O4gUeX8hY9w'
+        youtubeId: 'voO8FT-9q6Y'
       }
     ]
   },
@@ -49,14 +49,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Gêneros e tipos textuais',
     videos: [
       {
-        title: 'Tipologia Textual x Gêneros Textuais',
+        title: 'Generos Textuais [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'M_oXF6h8Yqw'
+        youtubeId: 'Ucjv4LT8CSg'
       },
       {
-        title: 'Gêneros Textuais e Tipos de Textos - Narrativo, Descritivo, Dissertativo',
+        title: 'GENEROS TEXTUAIS x TIPOS TEXTUAIS: QUAL A DIFERENCA? - Profa. Pamba',
         channel: 'Professora Pamba',
-        youtubeId: 'y-uI0uJ5ZtA'
+        youtubeId: 'J-MOSikttwo'
       }
     ]
   },
@@ -64,14 +64,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Sinonímia, antonímia, ambiguidade, polissemia',
     videos: [
       {
-        title: 'Semântica: Sinonímia, Antonímia, Homonímia, Paronímia',
+        title: 'Semantica [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'pWb9r7_sXQo'
+        youtubeId: 'dfkvdIGqZvs'
       },
       {
-        title: 'Polissemia e Ambiguidade - Aprenda de Vez',
+        title: 'POLISSEMIA E AMBIGUIDADE: DIFERENCAS - Profa. Pamba - Semantica',
         channel: 'Professora Pamba',
-        youtubeId: 'gA776Fw9CjQ'
+        youtubeId: 'OkiVG0_-Fn8'
       }
     ]
   },
@@ -79,31 +79,31 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Figuras de linguagem conotação e denotação',
     videos: [
       {
-        title: 'Figuras de Linguagem: Metáfora, Metonímia, Personificação e mais',
+        title: 'Figuras de Linguagem - Aula 01 [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'V_bX9O8h9wY'
+        youtubeId: 'n0e75nRstcU'
       },
       {
-        title: 'Denotação e Conotação - Sentido Literal x Sentido Figurado',
+        title: 'SENTIDO DENOTATIVO X CONOTATIVO (FIGURADO x REAL) - Profa. Pamba',
         channel: 'Professora Pamba',
-        youtubeId: 'I7mH9m0h2_4'
+        youtubeId: 'tFmSm1Gulig'
       }
     ]
   },
 
-  // LÍNGUA PORTUGUESA - TÓPICOS LINGUÍSTICOS
+  // LINGUA PORTUGUESA - TOPICOS LINGUISTICOS
   'lp-ling-01': {
     tecQuery: 'Variação linguística e norma culta',
     videos: [
       {
-        title: 'Variação Linguística: Tipos (Geográfica, Histórica, Social, Formal)',
+        title: 'Variacao Linguistica - AULA GRATUITA [Prof. Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'ImsfD36wYw0'
+        youtubeId: 'G3F7sRfK9FE'
       },
       {
-        title: 'Preconceito Linguístico e Norma Culta',
-        channel: 'Professora Pamba',
-        youtubeId: 'Qp7Uf-v2m1A'
+        title: 'Variacao Linguistica [Prof Noslen]',
+        channel: 'Professor Noslen',
+        youtubeId: '6fBOVygtNoU'
       }
     ]
   },
@@ -111,14 +111,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Estrutura e formação das palavras',
     videos: [
       {
-        title: 'Estrutura e Formação de Palavras: Derivação e Composição',
+        title: 'Formacao de Palavras por Composicao [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'S-79Z-0m3gQ'
+        youtubeId: 'U_nRXQh5L40'
       },
       {
-        title: 'Processos de Formação de Palavras - Prefixo, Sufixo e Hibridismo',
-        channel: 'Professora Pamba',
-        youtubeId: 'F2Wp6I3K2Cg'
+        title: 'Formacao de Palavras por Derivacao [Prof Noslen]',
+        channel: 'Professor Noslen',
+        youtubeId: '98qXxXx51T0'
       }
     ]
   },
@@ -126,14 +126,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Classes de palavras morfologia termos da oração',
     videos: [
       {
-        title: 'Classes de Palavras (Morfologia): Substantivo, Adjetivo, Verbo e mais',
+        title: 'Classe de Palavras [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'Z9hX8_U89wY'
+        youtubeId: 's8a6eXncWY8'
       },
       {
-        title: 'Termos Essenciais e Integrantes da Oração (Sintaxe)',
-        channel: 'Professor Noslen',
-        youtubeId: 'm8X9Y_U89wY'
+        title: 'O que e SUBSTANTIVO? Aprenda os TIPOS e CLASSIFICACOES de forma FACIL!',
+        channel: 'Portugues com Leticia',
+        youtubeId: 'BSGIAhRJGxw'
       }
     ]
   },
@@ -141,14 +141,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Orações coordenadas e subordinadas conectivos',
     videos: [
       {
-        title: 'Período Composto: Coordenação e Conjunções Coordenativas',
+        title: 'O QUE sao ORACOES COORDENADAS SINDETICAS? | Professor Noslen',
         channel: 'Professor Noslen',
-        youtubeId: 'V7h_X9U89wY'
+        youtubeId: 'VkQXlNXg2P0'
       },
       {
-        title: 'Orações Subordinadas Substantivas e Adjetivas',
-        channel: 'Professora Pamba',
-        youtubeId: 'Z0h_X9U89wY'
+        title: 'Oracoes Subordinadas Substantivas [Prof Noslen]',
+        channel: 'Professor Noslen',
+        youtubeId: '_kzTFOzf-_w'
       }
     ]
   },
@@ -156,14 +156,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Pontuação vírgula',
     videos: [
       {
-        title: 'Uso da Vírgula e Principais Regras de Pontuação',
+        title: 'Pontuacao - virgula, ponto e virgula e dois pontos [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'p3X8Y_V89wY'
+        youtubeId: '9tdpcfdr244'
       },
       {
-        title: 'Pontuação para Concursos - Exercícios Comentados',
-        channel: 'Professora Pamba',
-        youtubeId: 'Y9hX8_V89wY'
+        title: 'VIRGULA - Casos OBRIGATORIOS | Aprenda de verdade e nao erre nunca mais!',
+        channel: 'Portugues com Leticia',
+        youtubeId: 'zONGXynBdaY'
       }
     ]
   },
@@ -171,14 +171,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Concordância regência verbal nominal',
     videos: [
       {
-        title: 'Regência Verbal e Nominal - Regras de Uso da Preposição',
+        title: 'Concordancia Verbal - Aula 01 [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'I9hX8_U89wY'
+        youtubeId: '4ZJnTqTk4_Y'
       },
       {
-        title: 'Concordância Verbal e Nominal para Concursos',
+        title: 'Concordancia Verbal - Revisao Enem com Prof. Noslen',
         channel: 'Professor Noslen',
-        youtubeId: 'm8X9Y_U89wY'
+        youtubeId: 'hGwai_dUosA'
       }
     ]
   },
@@ -186,31 +186,31 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Novo acordo ortográfico hifen acentuação',
     videos: [
       {
-        title: 'Novo Acordo Ortográfico: Acentuação e Uso do Hífen de Forma Fácil',
+        title: 'Novo Acordo Ortografico | Parte 1 [Prof Noslen]',
         channel: 'Professor Noslen',
-        youtubeId: 'p4X8_W89wY'
+        youtubeId: 'LhW_Ee3Wkms'
       },
       {
-        title: 'Regras de Ortografia e Acentuação Gráfica',
-        channel: 'Professora Pamba',
-        youtubeId: 'p5X8_W89wY'
+        title: 'Novo Acordo Ortografico - Parte 2 [Prof Noslen]',
+        channel: 'Professor Noslen',
+        youtubeId: '2Ou4ApRLj88'
       }
     ]
   },
 
-  // MATEMÁTICA
+  // MATEMATICA
   'mat-01': {
     tecQuery: 'Operações básicas problemas adição subtração multiplicação divisão',
     videos: [
       {
-        title: 'Problemas com as Quatro Operações Matemáticas Básicas',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'g7h_W89wYhY'
+        title: 'COMO RESOLVER PROBLEMAS ENVOLVENDO AS QUATRO OPERACOES',
+        channel: 'Professor Ferretto',
+        youtubeId: '4PqECm1OA7U'
       },
       {
-        title: 'Matemática Básica para Concursos - Adição, Subtração, Multiplicação e Divisão',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X8V8h_Z89wY'
+        title: 'AULA: AS QUATRO OPERACOES FUNDAMENTAIS DA MATEMATICA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'ohiYUg6Gcfk'
       }
     ]
   },
@@ -218,14 +218,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Frações operações problemas',
     videos: [
       {
-        title: 'Adição, Subtração, Multiplicação e Divisão com Frações',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z7h_W89wYhY'
+        title: 'EXERCICIOS DE FRACAO - MATEMATICA BASICA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: '9DpDTkRxcCs'
       },
       {
-        title: 'Problemas com Frações para Concursos e Provas',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p8H8W_X99wY'
+        title: 'FRACOES (Parte 2): Operacoes Basicas | Matematica Basica - Aula 5',
+        channel: 'Professor Ferretto',
+        youtubeId: 'SgJpB78R7x0'
       }
     ]
   },
@@ -233,14 +233,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Números decimais operações problemas',
     videos: [
       {
-        title: 'Operações com Números Decimais (Soma, Subtração, Multiplicação, Divisão)',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p5Y8_X89wYg'
+        title: 'Matematica Basica - Aula 14 - Numeros decimais (parte 1)',
+        channel: 'Professor Ferretto',
+        youtubeId: 'lA1lVOBTSlQ'
       },
       {
-        title: 'Números Decimais em Problemas práticos',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p7Y8_X99wYg'
+        title: 'ADICAO COM NUMEROS DECIMAIS | NUMEROS DECIMAIS',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'cgHJZsVNqOI'
       }
     ]
   },
@@ -248,14 +248,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Potenciação propriedades expoente',
     videos: [
       {
-        title: 'Potenciação: Definições e Propriedades de Expoentes',
+        title: 'POTENCIACAO: Definicao e Propriedades | Matematica Basica - Aula 6',
         channel: 'Professor Ferretto',
-        youtubeId: 'X8V8h_Z89wY'
+        youtubeId: '4Vfw1XiHTpM'
       },
       {
-        title: 'Potenciação com números inteiros e racionais',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z8h_W89wYhY'
+        title: 'POTENCIAS e PROPRIEDADES das potencias | Matematica Basica',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'dGOhsZqCJKc'
       }
     ]
   },
@@ -263,14 +263,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Raiz quadrada radiciação aproximação',
     videos: [
       {
-        title: 'Raiz Quadrada Exata e por Aproximação Decimal',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p6X8_W89hYh'
+        title: 'RADICIACAO: Definicao e Propriedades | Matematica Basica - Aula 7',
+        channel: 'Professor Ferretto',
+        youtubeId: 'QmIjZgKhAEo'
       },
       {
-        title: 'Radiciação e Raiz Quadrada - Conceitos Iniciais',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X4V8h_Z89wY'
+        title: 'RAIZ QUADRADA APROXIMADA | RAIZ QUADRADA NAO EXATA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'S96R5Sm4clE'
       }
     ]
   },
@@ -278,14 +278,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Expressões numéricas números reais',
     videos: [
       {
-        title: 'Expressões Numéricas com Números Reais (Parênteses, Colchetes, Chaves)',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p7Y8_X99wYg'
+        title: 'EXPRESSOES NUMERICAS: Ordem nas Operacoes | Matematica Basica - Aula 3',
+        channel: 'Professor Ferretto',
+        youtubeId: 'BhDm2qGy780'
       },
       {
-        title: 'Expressões Numéricas Básicas e Avançadas',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z9h_W89wYhY'
+        title: 'EXPRESSOES NUMERICAS | MATEMATICA BASICA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'fG3tzCME95Y'
       }
     ]
   },
@@ -293,14 +293,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Sistemas de medidas comprimento superficie volume capacidade',
     videos: [
       {
-        title: 'Unidades de Medida e Conversão de Unidades (Comprimento, Superfície, Volume)',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p8X8_W89wYg'
+        title: 'MEDIDAS DE COMPRIMENTO - CONVERSAO DE UNIDADES DE MEDIDA #01',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'dHr5phd_qL8'
       },
       {
-        title: 'Conversão de Unidades de Capacidade (Litro, ml, m³)',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p8H8W_X99wY'
+        title: 'MEDIDAS DE AREA - CONVERSAO DE UNIDADES DE MEDIDA DE AREA #02',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'LWH7LNhbxPM'
       }
     ]
   },
@@ -308,14 +308,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Razão e proporção problemas',
     videos: [
       {
-        title: 'Razão e Proporção - Conceitos Fundamentais e Exercícios',
+        title: 'RAZAO E PROPORCAO (Parte 1): Propriedades e Conceitos | Matematica Basica - Aula 24',
         channel: 'Professor Ferretto',
-        youtubeId: 'X9V8h_Z89wY'
+        youtubeId: 'uIulBEk8gcM'
       },
       {
-        title: 'Razão e Proporção com Exercícios de Provas',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z0V8h_Z89wY'
+        title: 'RAZAO E PROPORCAO - Prof. Gis #01',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'Kf_YzZ0CnIs'
       }
     ]
   },
@@ -323,14 +323,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Divisão proporcional direta inversa',
     videos: [
       {
-        title: 'Divisão em Partes Diretamente e Inversamente Proporcionais',
+        title: 'RAZAO E PROPORCAO (Parte 2): Divisoes Proporcionais | Matematica Basica - Aula 25',
         channel: 'Professor Ferretto',
-        youtubeId: 'X0V8h_Z89wY'
+        youtubeId: '6Dsta1eZ1BA'
       },
       {
-        title: 'Partição Proporcional - Teoria e Exercícios Práticos',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z1V8h_Z89wY'
+        title: 'DIVISAO PROPORCIONAL - Partes Diretamente e Inversamente Proporcionais | MAB #59',
+        channel: 'Matematica Rio',
+        youtubeId: 'IJ8gGFGtSYU'
       }
     ]
   },
@@ -338,14 +338,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Regra de três simples composta',
     videos: [
       {
-        title: 'Regra de Três Simples e Composta - Aula Completa',
+        title: 'REGRA DE TRES SIMPLES: Grandezas Proporcionais | Matematica Basica - Aula 26',
         channel: 'Professor Ferretto',
-        youtubeId: 'r7o9hLsh87g'
+        youtubeId: 'alLifth7gxE'
       },
       {
-        title: 'Regra de Três Simples e Composta - Macetes de Resolução',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z2V8h_Z89wY'
+        title: 'REGRA DE TRES SIMPLES - Prof. Gis / Matematica',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'mnle8NcUYkQ'
       }
     ]
   },
@@ -353,14 +353,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Porcentagem problemas',
     videos: [
       {
-        title: 'Porcentagem - Teoria e Exercícios para Concursos',
+        title: 'PORCENTAGEM: Teoria e Exemplos | Matematica Basica - Aula 29',
         channel: 'Professor Ferretto',
-        youtubeId: 'X1V8h_Z89wY'
+        youtubeId: 'CERiIwParX4'
       },
       {
-        title: 'Como Calcular Porcentagem de Cabeça e no Papel',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z3V8h_Z89wY'
+        title: 'Questao de CONCURSO | Problema de PORCENTAGEM | Explicacao detalhada',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: '4G4fxYdgsqY'
       }
     ]
   },
@@ -368,14 +368,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Média aritmética ponderada estatistica',
     videos: [
       {
-        title: 'Médias: Aritmética, Ponderada, Geométrica e Harmônica',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X2V8h_Z89wY'
+        title: 'MEDIA ARITMETICA SIMPLES | MEDIANA E MODA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'wMjNqebDLu4'
       },
       {
-        title: 'Média Aritmética Simples e Ponderada',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'Z4V8h_Z89wY'
+        title: 'MEDIA PONDERADA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'JQ91E7UeQ3g'
       }
     ]
   },
@@ -383,14 +383,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Polinômios valor numerico operações',
     videos: [
       {
-        title: 'Polinômios: Conceito, Valor Numérico e Operações Básicas',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p9X8_W89wYg'
+        title: 'Polinomios | Grau | Valor Numerico | Raiz',
+        channel: 'Professor Ferretto',
+        youtubeId: 'DUk6IShk-Hc'
       },
       {
-        title: 'Adição, Subtração e Multiplicação de Polinômios',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p9Y8_X99wYg'
+        title: 'VALOR NUMERICO DA EXPRESSAO ALGEBRICA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'LY37iyVRLhU'
       }
     ]
   },
@@ -398,14 +398,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Produtos notáveis',
     videos: [
       {
-        title: 'Produtos Notáveis - Quadrado da Soma, Quadrado da Diferença',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p0X8_W89wYg'
+        title: 'PRODUTOS NOTAVEIS: Principais Casos | Matematica Basica - Aula 9',
+        channel: 'Professor Ferretto',
+        youtubeId: '_3YQvVKbqn0'
       },
       {
-        title: 'Produtos Notáveis e Fórmulas de Fatoração',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X3V8h_Z89wY'
+        title: 'PRODUTOS NOTAVEIS. QUADRADO DA SOMA DE DOIS TERMOS #01',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'fk8CmDJxWC0'
       }
     ]
   },
@@ -413,14 +413,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Fatoração algébrica',
     videos: [
       {
-        title: 'Fatoração de Expressões Algébricas - Todos os Casos',
+        title: 'Matematica Basica - Aula 21 - Fatoracao de expressoes algebricas (parte 1)',
         channel: 'Professor Ferretto',
-        youtubeId: 'X3V8h_Z89wY'
+        youtubeId: 'gpLUtjncoSo'
       },
       {
-        title: 'Fatoração Algébrica de Polinômios Fácil',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p2X8_W89wYg'
+        title: 'FATORACAO de EXPRESSOES ALGEBRICAS | FATOR COMUM em EVIDENCIA | Aula 1',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'bHIP8Ei5PFA'
       }
     ]
   },
@@ -428,14 +428,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Radiciação simplificação propriedades',
     videos: [
       {
-        title: 'Radiciação: Conceitos, Propriedades e Simplificação de Radicais',
+        title: 'RADICIACAO: Definicao e Propriedades | Matematica Basica - Aula 7',
         channel: 'Professor Ferretto',
-        youtubeId: 'X4V8h_Z89wY'
+        youtubeId: 'QmIjZgKhAEo'
       },
       {
-        title: 'Radiciação - Teoria e Exercícios',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p3X8_W89wYg'
+        title: 'PROPRIEDADES DOS RADICAIS | RADICIACAO',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: '494171csjuw'
       }
     ]
   },
@@ -443,14 +443,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Equação de 1 grau e 2 grau Bhaskara',
     videos: [
       {
-        title: 'Equações de 2º Grau e Fórmula de Bhaskara para Concursos',
+        title: 'EQUACAO DO 2o GRAU (Parte 1): Bhaskara e Soma e Produto | Matematica Basica - Aula 16',
         channel: 'Professor Ferretto',
-        youtubeId: 'X5V8h_Z89wY'
+        youtubeId: 'toAaUBwitFE'
       },
       {
-        title: 'Como Resolver Equação do 1º Grau Facilmente',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p4X8_W89wYg'
+        title: 'FORMULA DE BHASKARA | COMO FAZER EQUACAO DO 2o GRAU',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'LNLvMo1PWok'
       }
     ]
   },
@@ -458,14 +458,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Sistemas de equações primeiro grau substituição adição',
     videos: [
       {
-        title: 'Sistemas de Equações do 1º Grau - Método da Adição e Substituição',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p1X8_W89wYg'
+        title: 'Sistema de equacoes do 1o GRAU',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'OTfI_h9ONUo'
       },
       {
-        title: 'Sistemas Lineares com Duas Incógnitas',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p5Y8_X89wYg'
+        title: 'SISTEMA DE EQUACOES do 1o grau Metodo da ADICAO | Matematica Basica',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'Wk2ofyakSTs'
       }
     ]
   },
@@ -473,14 +473,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Sistemas de equações segundo grau',
     videos: [
       {
-        title: 'Sistemas de Equações do 2º Grau - Passo a Passo',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X6V8h_Z89wY'
+        title: 'SISTEMA DE EQUACOES do 2o grau SUBSTITUICAO | 9o ano',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: '7CvjlSivFlQ'
       },
       {
-        title: 'Sistemas não-lineares e do segundo grau',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p6X8_W89wYg'
+        title: 'Equacao do 2o Grau - Questao 1',
+        channel: 'Professor Ferretto',
+        youtubeId: 'Uehm1AR8qiM'
       }
     ]
   },
@@ -488,14 +488,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Angulos classificacao conceitos geometria',
     videos: [
       {
-        title: 'Ângulos: O que são, Classificação e Unidades de Medidas',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p2X8_W89wYg'
+        title: 'Geometria Plana: Introducao - Angulos (Aula 1)',
+        channel: 'Professor Ferretto',
+        youtubeId: '0CnUdzmpO8E'
       },
       {
-        title: 'Ângulos Complementares, Suplementares e Opostos pelo Vértice',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X7V8h_Z89wY'
+        title: 'ANGULOS - DEFINICAO E TIPOS DE ANGULOS | RETO, NULO, AGUDO, OBTUSO',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'nAvqZSglTmA'
       }
     ]
   },
@@ -503,14 +503,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Ângulos problemas geometria',
     videos: [
       {
-        title: 'Exercícios Comentados de Ângulos na Geometria Plana',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p3Y8_X99wYg'
+        title: 'ANGULOS CORRESPONDENTES | RETAS PARALELAS CORTADAS POR UMA TRANSVERSAL',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'GT0vBg9h20M'
       },
       {
-        title: 'Problemas de Ângulos Relacionados a Retas Paralelas Cortadas por Transversal',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p3X8_W89wYg'
+        title: 'ANGULOS FORMADOS POR RETAS PARALELAS CORTADAS POR UMA TRANSVERSAL - EXERCICIOS',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'P4-NL2FBtK0'
       }
     ]
   },
@@ -518,14 +518,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Polígonos angulos diagonais geometria plana',
     videos: [
       {
-        title: 'Polígonos: Número de Diagonais, Soma de Ângulos Internos e Externos',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p4X8_W89wYg'
+        title: 'ANGULO INTERNO de um POLIGONO | Prof. Gis #08',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'M-fKfmH1aL8'
       },
       {
-        title: 'Polígonos Regulares - Teoria e Exercícios Resolvidos',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X8V8h_Z89wY'
+        title: 'SOMA DOS ANGULOS EXTERNOS DE UM POLIGONO CONVEXO | Prof. Gis #10',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: '7pADvVbNcsg'
       }
     ]
   },
@@ -533,14 +533,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Triangulos classificação ângulos internos Tales',
     videos: [
       {
-        title: 'Triângulos: Classificação de Lados e Ângulos (Teorema de Tales)',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p5X8_W89wYg'
+        title: 'Geometria Plana: Classificacao dos Triangulos (Aula 6)',
+        channel: 'Professor Ferretto',
+        youtubeId: '3x920GHyF4g'
       },
       {
-        title: 'Triângulos: Lei Angular e Soma dos Ângulos Internos',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p6Y8_X99wYg'
+        title: 'Triangulos #03 - Lei angular de Tales e Teorema do angulo externo',
+        channel: 'Professor Ferretto',
+        youtubeId: '7wfEaCR5bO4'
       }
     ]
   },
@@ -548,14 +548,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Semelhança de triângulos pontos notaveis mediatriz mediana bissetriz',
     videos: [
       {
-        title: 'Semelhança de Triângulos - Critérios e Casos',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p6X8_W89wYg'
+        title: 'SEMELHANCA DE TRIANGULOS | RAZAO DE SEMELHANCA | TEOREMA DE TALES | 9o ano',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'TeKvhnJgNYU'
       },
       {
-        title: 'Pontos Notáveis do Triângulo (Baricentro, Incentro, Ortocentro, Circuncentro)',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X9V8h_Z89wY'
+        title: 'BISSETRIZ | Prof. Gis',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'rDDC98e0ujw'
       }
     ]
   },
@@ -563,14 +563,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Relações métricas triângulo retângulo teorema de Pitágoras',
     videos: [
       {
-        title: 'Relações Métricas no Triângulo Retângulo e Teorema de Pitágoras',
+        title: 'Geometria Plana: Triangulo Retangulo - Relacoes Metricas (Aula 10)',
         channel: 'Professor Ferretto',
-        youtubeId: 'X7V8h_Z89wY'
+        youtubeId: 'f4JBVvr72MQ'
       },
       {
-        title: 'Teorema de Pitágoras e Aplicações em Problemas',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p7X8_W89wYg'
+        title: 'RELACOES METRICAS NO TRIANGULO RETANGULO | Prof. Gis',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'mFszQZAke7o'
       }
     ]
   },
@@ -578,14 +578,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Relações trigonométricas no triângulo retângulo seno cosseno tangente',
     videos: [
       {
-        title: 'Razões Trigonométricas no Triângulo Retângulo (Seno, Cosseno e Tangente)',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p7X8_W89wYg'
+        title: 'SENO, COSSENO E TANGENTE - TRIGONOMETRIA NO TRIANGULO RETANGULO | Prof. Gis',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'D-E_A04ReTE'
       },
       {
-        title: 'Trigonometria Básica e Tabela dos Ângulos Notáveis (30º, 45º, 60º)',
+        title: 'Razoes trigonometricas no triangulo retangulo',
         channel: 'Professor Ferretto',
-        youtubeId: 'X8V8h_Z89wY'
+        youtubeId: 'UWt_mc84t38'
       }
     ]
   },
@@ -593,14 +593,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Lei dos senos lei dos cossenos triângulo qualquer',
     videos: [
       {
-        title: 'Lei dos Senos e Lei dos Cossenos em Qualquer Triângulo',
+        title: 'Lei dos Senos - GEOMETRIA PLANA (Aula 14)',
         channel: 'Professor Ferretto',
-        youtubeId: 'X8V8h_Z89wZ'
+        youtubeId: 't6zTP7fU8lA'
       },
       {
-        title: 'Lei dos Senos e Lei dos Cossenos - Exercícios Comentados',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p8X8_W89wYg'
+        title: 'AULAO: TRIGONOMETRIA - LEI DOS SENOS E LEI DOS COSSENOS - ENEM 2020',
+        channel: 'Professor Ferretto',
+        youtubeId: 'qZtwJEhjg_4'
       }
     ]
   },
@@ -608,14 +608,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Poligonos regulares inscritos lado apotema perimetro',
     videos: [
       {
-        title: 'Polígonos Regulares Inscritos e Circunscritos (Lado e Apótema)',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p8X8_W89wYh'
+        title: 'POLIGONOS REGULARES | GEOMETRIA PLANA | Prof. Gis #05',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'B-1xL2ym7SQ'
       },
       {
-        title: 'Apótema e Lado de Triângulos, Quadrados e Hexágonos na Circunferência',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p9Y8_X99wYg'
+        title: 'EXERCICIOS RESOLVIDOS SOBRE LADO E APOTEMA DE POLIGONOS REGULARES',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: '4ckpjxBHN1o'
       }
     ]
   },
@@ -623,14 +623,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Área das figuras planas quadrado triangulo circulo losango trapezio',
     videos: [
       {
-        title: 'Área de Figuras Planas: Retângulo, Quadrado, Triângulo, Trapézio, Losango, Círculo',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p9X8_W89wYh'
+        title: 'AREA DO TRIANGULO | AREA DE FIGURAS PLANAS | Prof. Gis',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'UXoBHQBT5OE'
       },
       {
-        title: 'Áreas de Figuras Planas para Concursos',
-        channel: 'Professor Ferretto',
-        youtubeId: 'X9V8h_Z89wY'
+        title: 'AREA DO RETANGULO | AREA DE FIGURAS PLANAS | MATEMATICA | Prof. Gis',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'aIKxhaxynJ8'
       }
     ]
   },
@@ -638,14 +638,14 @@ export const STUDY_RESOURCES: Record<string, StudyResource> = {
     tecQuery: 'Circunferência círculo arcos angulos inscritos',
     videos: [
       {
-        title: 'Comprimento de Circunferência e Ângulos na Circunferência',
-        channel: 'Gis com Giz Matemática',
-        youtubeId: 'p0X8_W89wYh'
+        title: 'Geometria Plana: Angulos na Circunferencia - Parte 1 (Aula 23)',
+        channel: 'Professor Ferretto',
+        youtubeId: 'NKEPE99XOkQ'
       },
       {
-        title: 'Ângulos Inscritos e Centrais na Circunferência',
-        channel: 'Professora Angela Matemática',
-        youtubeId: 'p0Y8_X99wYg'
+        title: 'ANGULO CENTRAL E INSCRITO | ANGULOS NA CIRCUNFERENCIA',
+        channel: 'Gis com Giz Matematica',
+        youtubeId: 'H06B-VG2i3g'
       }
     ]
   }

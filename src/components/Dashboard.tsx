@@ -364,10 +364,10 @@ export default function Dashboard({ topics, onTabChange }: DashboardProps) {
                 <span className="text-gold">&rarr;</span>
               </button>
               <button 
-                onClick={() => onTabChange('pomodoro')}
+                onClick={() => onTabChange('edital')}
                 className="flex items-center justify-between p-3.5 bg-dark-bg hover:bg-gold/10 text-dark-text border border-dark-border hover:border-gold/20 rounded-xl text-xs font-semibold text-left transition duration-200"
               >
-                <span>Iniciar Cronômetro Pomodoro</span>
+                <span>Usar Cronômetro Pomodoro nos Assuntos</span>
                 <span className="text-gold">&rarr;</span>
               </button>
               <button 
