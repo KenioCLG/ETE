@@ -157,7 +157,9 @@ export default function MockExam() {
   const handleStartCustomExam = async () => {
     setLoadingSimulado(true);
     try {
-      const response = await fetch('/api/generate-simulado');
+      // Cache-busting (timestamp + no-store) para garantir um simulado novo a cada clique,
+      // sem o navegador/PWA devolver uma resposta antiga em cache.
+      const response = await fetch(`/api/generate-simulado?_=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       if (response.ok && data.questions) {
         const formattedQuestions = data.questions.map((q: any, index: number) => ({

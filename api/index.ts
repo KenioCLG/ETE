@@ -234,8 +234,10 @@ Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explica�
       },
     });
 
+    // 45s dá tempo da IA gerar as 20 questões (a função tem maxDuration=60).
+    // 9s era curto demais e estourava sempre, forçando o banco reserva.
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("AI_TIMEOUT")), 9000)
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 45000)
     );
 
     const response = await Promise.race([aiPromise, timeoutPromise]) as any;
