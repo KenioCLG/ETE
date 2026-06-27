@@ -5,14 +5,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MOCK_EXAM_QUESTIONS } from '../data/mockQuiz';
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
   AlertTriangle,
   RotateCcw,
   BookOpen,
   Sparkles,
+  GraduationCap,
 } from 'lucide-react';
 
 export default function MockExam() {
@@ -25,8 +26,18 @@ export default function MockExam() {
   const [questions, setQuestions] = useState<any[]>(MOCK_EXAM_QUESTIONS);
   const [loadingSimulado, setLoadingSimulado] = useState(false);
   const [isCustomSimulado, setIsCustomSimulado] = useState(false);
+  const [tecConfigured, setTecConfigured] = useState(false);
+  const [loadingTec, setLoadingTec] = useState(false);
 
   const timerRef = useRef<any>(null);
+
+  // Check TecConcursos availability on mount
+  useEffect(() => {
+    fetch('/api/tec/status')
+      .then(r => r.json())
+      .then(data => setTecConfigured(data.configured))
+      .catch(() => setTecConfigured(false));
+  }, []);
 
   useEffect(() => {
     if (examStarted && !submitted) {
@@ -85,6 +96,52 @@ export default function MockExam() {
       handleStartExam();
     } finally {
       setLoadingSimulado(false);
+    }
+  };
+
+  const handleStartTecExam = async () => {
+    setLoadingTec(true);
+    try {
+      const response = await fetch('/api/tec/simulado');
+      const data = await response.json();
+      if (response.ok && data.portQuestoes && data.matQuestoes) {
+        const formatTecQuestions = (questoes: any[], subject: string) => {
+          if (!Array.isArray(questoes)) return [];
+          return questoes.slice(0, 10).map((q: any, i: number) => ({
+            id: subject === 'Língua Portuguesa' ? `tec-port-${i}` : `tec-mat-${i}`,
+            subject,
+            question: q.enunciado || q.question || q.texto || String(q),
+            options: q.alternativas || q.options || [],
+            answerIndex: q.gabaritoIndex ?? q.answerIndex ?? 0,
+            explanation: q.explanation || `Gabarito: Alternativa ${['A','B','C','D','E'][q.gabaritoIndex ?? q.answerIndex ?? 0]}.`
+          }));
+        };
+
+        const portFormatted = formatTecQuestions(data.portQuestoes, 'Língua Portuguesa');
+        const matFormatted = formatTecQuestions(data.matQuestoes, 'Matemática');
+        const allQuestions = [...portFormatted, ...matFormatted];
+
+        if (allQuestions.length > 0) {
+          setQuestions(allQuestions);
+          setIsCustomSimulado(true);
+          setAnswers({});
+          setSubmitted(false);
+          setSecondsLeft(60 * 60);
+          setExamStarted(true);
+          setActiveTab('port');
+        } else {
+          console.warn("Sem questoes do TecConcursos. Usando simulado padrao.");
+          handleStartExam();
+        }
+      } else {
+        console.warn("Resposta invalida do TecConcursos:", data.error);
+        handleStartExam();
+      }
+    } catch (err) {
+      console.error('Erro ao conectar ao TecConcursos:', err);
+      handleStartExam();
+    } finally {
+      setLoadingTec(false);
     }
   };
 
@@ -186,6 +243,16 @@ export default function MockExam() {
               <Sparkles className="w-4 h-4" />
               {loadingSimulado ? 'Gerando Simulado...' : 'Gerar Simulado com IA'}
             </button>
+            {tecConfigured && (
+              <button
+                onClick={handleStartTecExam}
+                disabled={loadingTec || loadingSimulado}
+                className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md transition duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <GraduationCap className="w-4 h-4" />
+                {loadingTec ? 'Buscando Questões...' : 'Simulado TecConcursos'}
+              </button>
+            )}
           </div>
         </div>
       ) : (

@@ -1011,6 +1011,119 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
               </div>
             )}
 
+            {/* TecConcursos Quiz Panel */}
+            {hasTecQuiz && (
+              <div className="bg-dark-card rounded-xl border border-emerald-900/30 p-5 shadow-inner space-y-5">
+                <div className="flex items-center justify-between border-b border-dark-border pb-2.5">
+                  <div>
+                    <span className="text-xs font-serif italic text-emerald-400 tracking-wider uppercase flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5" /> Questões Reais - TecConcursos
+                    </span>
+                    {tecSource[topic.id] && (
+                      <span className="text-[10px] text-dark-muted font-mono block mt-0.5">{tecSource[topic.id]}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleTecQuiz(topic)}
+                    className="p-1 hover:bg-dark-bg rounded"
+                  >
+                    <X className="w-4 h-4 text-dark-muted" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {tecQuiz[topic.id].map((q, qIdx) => {
+                    const selectedOpt = tecQuizAnswers[topic.id]?.[qIdx];
+                    const isSubmitted = tecQuizSubmitted[topic.id];
+                    const isCorrect = selectedOpt === q.answerIndex;
+
+                    return (
+                      <div key={qIdx} className="space-y-3 pb-5 border-b border-dark-border last:border-0 last:pb-0">
+                        <h5 className="font-semibold text-dark-text text-sm leading-relaxed">
+                          {qIdx + 1}. {q.question}
+                        </h5>
+
+                        <div className="grid grid-cols-1 gap-2 pl-2">
+                          {q.options.map((opt, optIdx) => {
+                            const isSelected = selectedOpt === optIdx;
+                            const isOptionCorrect = optIdx === q.answerIndex;
+
+                            let optStyle = "border-dark-border hover:border-dark-muted hover:bg-dark-bg text-dark-text";
+                            if (isSelected) {
+                              optStyle = "border-emerald-500 bg-emerald-950/10 text-emerald-400 font-medium";
+                            }
+                            if (isSubmitted) {
+                              if (isOptionCorrect) {
+                                optStyle = "border-emerald-500 bg-emerald-950/20 text-emerald-400 font-semibold";
+                              } else if (isSelected && !isCorrect) {
+                                optStyle = "border-rose-500 bg-rose-950/20 text-rose-400";
+                              } else {
+                                optStyle = "border-dark-border opacity-50 text-dark-muted";
+                              }
+                            }
+
+                            return (
+                              <button
+                                key={optIdx}
+                                disabled={isSubmitted}
+                                onClick={() => handleSelectTecAnswer(topic.id, qIdx, optIdx)}
+                                className={`text-left p-3.5 rounded-lg border text-xs transition duration-150 flex items-center justify-between ${optStyle}`}
+                              >
+                                <span>{opt}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {isSubmitted && (
+                          <div className={`p-4 rounded-xl text-xs leading-relaxed ${
+                            isCorrect ? 'bg-emerald-950/20 border border-emerald-900/30 text-emerald-300' : 'bg-rose-950/20 border border-rose-900/30 text-rose-300'
+                          }`}>
+                            <div className="font-bold mb-1 flex items-center justify-between">
+                              <span>{isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta!'}</span>
+                              {q.explanation.includes('Clique em') && (
+                                <button
+                                  onClick={() => handleExplicarGabarito(topic.id, qIdx)}
+                                  className="text-[10px] px-2 py-0.5 bg-dark-bg border border-dark-border rounded text-gold hover:text-gold-hover transition"
+                                >
+                                  Explicar Gabarito (IA)
+                                </button>
+                              )}
+                            </div>
+                            <div className="text-dark-text opacity-90 leading-relaxed font-medium">{q.explanation}</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {!tecQuizSubmitted[topic.id] ? (
+                  <button
+                    onClick={() => handleSubmitTecQuiz(topic.id)}
+                    disabled={Object.keys(tecQuizAnswers[topic.id] || {}).length < tecQuiz[topic.id].length}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-dark-bg disabled:text-dark-muted disabled:border-dark-border disabled:cursor-not-allowed border border-transparent text-xs font-bold py-2.5 rounded-lg shadow transition duration-200"
+                  >
+                    Confirmar Respostas
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between bg-dark-bg border border-dark-border p-3.5 rounded-xl">
+                    <span className="text-xs text-dark-muted font-semibold font-mono">
+                      Acertos: {
+                        tecQuiz[topic.id].filter((q, idx) => tecQuizAnswers[topic.id]?.[idx] === q.answerIndex).length
+                      } de {tecQuiz[topic.id].length}
+                    </span>
+                    <button
+                      onClick={() => handleTecQuiz(topic)}
+                      className="text-emerald-400 hover:text-emerald-300 text-xs font-bold"
+                    >
+                      Buscar Novas Questões
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Videoaulas & Questões Práticas (TecConcursos) */}
             <div className="space-y-6 pt-5 border-t border-dark-border/70">
               {/* Column 1: Video Lessons Player & Selector */}
