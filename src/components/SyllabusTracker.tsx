@@ -130,13 +130,27 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
   const [tecSource, setTecSource] = useState<{ [topicId: string]: string }>({});
 
   // Pomodoro States
-  const [pomoActive, setPomoActive] = useState<boolean>(false);
-  const [pomoTopicId, setPomoTopicId] = useState<string | null>(null);
-  const [pomoSecondsLeft, setPomoSecondsLeft] = useState<number>(25 * 60);
-  const [pomoMode, setPomoMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
-  const [pomoSecondsAccumulated, setPomoSecondsAccumulated] = useState<number>(0);
-  const [pomoSoundEnabled, setPomoSoundEnabled] = useState<boolean>(true);
-  const [studyParamsCollapsed, setStudyParamsCollapsed] = useState<boolean>(false);
+  const [pomoActive, setPomoActive] = useState<boolean>(() => {
+    return localStorage.getItem('ete_pomo_active') === 'true';
+  });
+  const [pomoTopicId, setPomoTopicId] = useState<string | null>(() => {
+    return localStorage.getItem('ete_pomo_topic_id');
+  });
+  const [pomoSecondsLeft, setPomoSecondsLeft] = useState<number>(() => {
+    const saved = localStorage.getItem('ete_pomo_seconds_left');
+    return saved ? parseInt(saved, 10) : 25 * 60;
+  });
+  const [pomoMode, setPomoMode] = useState<'work' | 'shortBreak' | 'longBreak'>(() => {
+    return (localStorage.getItem('ete_pomo_mode') as any) || 'work';
+  });
+  const [pomoSecondsAccumulated, setPomoSecondsAccumulated] = useState<number>(() => {
+    const saved = localStorage.getItem('ete_pomo_seconds_accumulated');
+    return saved ? parseFloat(saved) : 0;
+  });
+  const [pomoSoundEnabled, setPomoSoundEnabled] = useState<boolean>(() => {
+    return localStorage.getItem('ete_pomo_sound_enabled') !== 'false';
+  });
+  const [studyParamsCollapsed, setStudyParamsCollapsed] = useState<boolean>(true);
 
   const topicsRef = useRef(topics);
   const onUpdateTopicRef = useRef(onUpdateTopic);
@@ -145,6 +159,20 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
     topicsRef.current = topics;
     onUpdateTopicRef.current = onUpdateTopic;
   }, [topics, onUpdateTopic]);
+
+  // Sync state values to localStorage
+  useEffect(() => {
+    localStorage.setItem('ete_pomo_active', String(pomoActive));
+    if (pomoTopicId) {
+      localStorage.setItem('ete_pomo_topic_id', pomoTopicId);
+    } else {
+      localStorage.removeItem('ete_pomo_topic_id');
+    }
+    localStorage.setItem('ete_pomo_seconds_left', String(pomoSecondsLeft));
+    localStorage.setItem('ete_pomo_mode', pomoMode);
+    localStorage.setItem('ete_pomo_seconds_accumulated', String(pomoSecondsAccumulated));
+    localStorage.setItem('ete_pomo_sound_enabled', String(pomoSoundEnabled));
+  }, [pomoActive, pomoTopicId, pomoSecondsLeft, pomoMode, pomoSecondsAccumulated, pomoSoundEnabled]);
 
   // Play sound/speech alerts
   const playPomoAlert = (text: string) => {
@@ -156,47 +184,120 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
     }
   };
 
+  // Mount synchronization based on real time
+  useEffect(() => {
+    const savedActive = localStorage.getItem('ete_pomo_active') === 'true';
+    if (savedActive) {
+      const endTimeStr = localStorage.getItem('ete_pomo_end_time');
+      const topicId = localStorage.getItem('ete_pomo_topic_id');
+      const mode = localStorage.getItem('ete_pomo_mode') || 'work';
+      const acc = parseFloat(localStorage.getItem('ete_pomo_seconds_accumulated') || '0');
+      
+      if (endTimeStr && topicId) {
+        const endTime = parseInt(endTimeStr, 10);
+        const now = Date.now();
+        if (endTime > now) {
+          const secLeft = Math.ceil((endTime - now) / 1000);
+          setPomoSecondsLeft(secLeft);
+          setPomoActive(true);
+        } else {
+          // Timer expired while offline or closed!
+          if (mode === 'work') {
+            const savedSecLeft = parseInt(localStorage.getItem('ete_pomo_seconds_left') || '0', 10);
+            const totalWorkSec = acc + savedSecLeft;
+            const minutesToCredit = Math.floor(totalWorkSec / 60);
+            if (minutesToCredit > 0) {
+              const currentTopic = topicsRef.current.find(t => t.id === topicId);
+              if (currentTopic) {
+                onUpdateTopicRef.current({
+                  ...currentTopic,
+                  minutes: currentTopic.minutes + minutesToCredit
+                });
+              }
+            }
+          }
+          
+          // Reset or change to break if work finished
+          setPomoActive(false);
+          localStorage.removeItem('ete_pomo_active');
+          localStorage.removeItem('ete_pomo_end_time');
+          
+          if (mode === 'work') {
+            setPomoMode('shortBreak');
+            setPomoSecondsLeft(5 * 60);
+            setPomoSecondsAccumulated(0);
+          } else {
+            setPomoMode('work');
+            setPomoSecondsLeft(25 * 60);
+            setPomoSecondsAccumulated(0);
+          }
+        }
+      }
+    }
+  }, []);
+
+  const lastTickRef = useRef<number>(Date.now());
+
   useEffect(() => {
     let timerId: any = null;
     if (pomoActive && pomoTopicId) {
+      lastTickRef.current = Date.now();
       timerId = setInterval(() => {
-        setPomoSecondsLeft((prev) => {
-          // Track exact accumulated work seconds
-          if (pomoMode === 'work') {
-            setPomoSecondsAccumulated((acc) => {
-              const nextAcc = acc + 1;
-              if (nextAcc >= 60) {
-                // Find latest topic state from ref
-                const currentTopic = topicsRef.current.find(t => t.id === pomoTopicId);
-                if (currentTopic) {
-                  onUpdateTopicRef.current({
-                    ...currentTopic,
-                    minutes: currentTopic.minutes + 1
-                  });
-                }
-                return 0; // reset accumulated seconds
-              }
-              return nextAcc;
-            });
-          }
+        const now = Date.now();
+        const endTimeStr = localStorage.getItem('ete_pomo_end_time');
+        let endTime = endTimeStr ? parseInt(endTimeStr, 10) : 0;
+        if (!endTime) {
+          endTime = now + pomoSecondsLeft * 1000;
+          localStorage.setItem('ete_pomo_end_time', String(endTime));
+        }
 
-          if (prev <= 1) {
-            clearInterval(timerId);
-            setPomoActive(false);
-            if (pomoMode === 'work') {
-              playPomoAlert("Foco concluído! Excelente estudo. Hora de descansar um pouco.");
-              setPomoMode('shortBreak');
-              setPomoSecondsAccumulated(0);
-              return 5 * 60;
-            } else {
-              playPomoAlert("Pausa concluída! Vamos voltar ao foco?");
-              setPomoMode('work');
-              setPomoSecondsAccumulated(0);
-              return 25 * 60;
+        const msLeft = endTime - now;
+        
+        // Track work seconds using time elapsed (prevents throttling drift!)
+        const elapsedSec = (now - lastTickRef.current) / 1000;
+        lastTickRef.current = now;
+
+        if (pomoMode === 'work' && elapsedSec > 0) {
+          setPomoSecondsAccumulated((acc) => {
+            const nextAcc = acc + elapsedSec;
+            if (nextAcc >= 60) {
+              const mins = Math.floor(nextAcc / 60);
+              const currentTopic = topicsRef.current.find(t => t.id === pomoTopicId);
+              if (currentTopic) {
+                onUpdateTopicRef.current({
+                  ...currentTopic,
+                  minutes: currentTopic.minutes + mins
+                });
+              }
+              return nextAcc % 60;
             }
+            return nextAcc;
+          });
+        }
+
+        if (msLeft <= 0) {
+          clearInterval(timerId);
+          setPomoActive(false);
+          localStorage.removeItem('ete_pomo_active');
+          localStorage.removeItem('ete_pomo_end_time');
+          
+          if (pomoMode === 'work') {
+            playPomoAlert("Foco concluído! Excelente estudo. Hora de descansar um pouco.");
+            setPomoMode('shortBreak');
+            setPomoSecondsLeft(5 * 60);
+            setPomoSecondsAccumulated(0);
+            const nextEndTime = Date.now() + 5 * 60 * 1000;
+            localStorage.setItem('ete_pomo_end_time', String(nextEndTime));
+            setPomoActive(true); // Auto-start break!
+          } else {
+            playPomoAlert("Pausa concluída! Vamos voltar ao foco?");
+            setPomoMode('work');
+            setPomoSecondsLeft(25 * 60);
+            setPomoSecondsAccumulated(0);
           }
-          return prev - 1;
-        });
+        } else {
+          setPomoSecondsLeft(Math.ceil(msLeft / 1000));
+        }
       }, 1000);
     } else {
       if (timerId) clearInterval(timerId);
@@ -703,6 +804,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                             setPomoMode('work');
                             setPomoSecondsLeft(25 * 60);
                             setPomoSecondsAccumulated(0);
+                            localStorage.removeItem('ete_pomo_end_time');
                           }}
                           className={`flex-1 py-1 rounded text-[9px] font-bold transition ${
                             pomoTopicId === topic.id && pomoMode === 'work'
@@ -718,6 +820,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                             setPomoMode('shortBreak');
                             setPomoSecondsLeft(5 * 60);
                             setPomoSecondsAccumulated(0);
+                            localStorage.removeItem('ete_pomo_end_time');
                           }}
                           className={`flex-1 py-1 rounded text-[9px] font-bold transition ${
                             pomoTopicId === topic.id && pomoMode === 'shortBreak'
@@ -740,12 +843,16 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                             setPomoMode('work');
                             setPomoSecondsLeft(25 * 60);
                             setPomoSecondsAccumulated(0);
+                            localStorage.setItem('ete_pomo_end_time', String(Date.now() + 25 * 60 * 1000));
                             setPomoActive(true);
                             playPomoAlert("Iniciando foco de vinte e cinco minutos neste assunto.");
                           } else {
                             // Toggle existing timer
                             if (!pomoActive) {
                               playPomoAlert(pomoMode === 'work' ? "Bom estudo." : "Aproveite a pausa.");
+                              localStorage.setItem('ete_pomo_end_time', String(Date.now() + pomoSecondsLeft * 1000));
+                            } else {
+                              localStorage.removeItem('ete_pomo_end_time');
                             }
                             setPomoActive(!pomoActive);
                           }
@@ -771,6 +878,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                         <button
                           onClick={() => {
                             setPomoActive(false);
+                            localStorage.removeItem('ete_pomo_end_time');
                             setPomoSecondsLeft(pomoMode === 'work' ? 25 * 60 : 5 * 60);
                             setPomoSecondsAccumulated(0);
                           }}
@@ -1158,15 +1266,10 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           allowFullScreen
                           loading="lazy"
-                          referrerPolicy="no-referrer"
                           className="absolute inset-0 w-full h-full"
                         ></iframe>
                       </div>
 
-                      {/* Highly descriptive iframe browser security / cookie policy notice */}
-                      <div className="text-[10px] text-dark-muted leading-relaxed bg-dark-bg/40 rounded-lg p-2.5 border border-dark-border/40">
-                        <b>Dica de Reprodução:</b> Como esta aplicacao roda dentro de uma pre-visualizacao, alguns navegadores (como Chrome ou Safari) podem bloquear o video por seguranca. Caso apareca uma tela preta ou erro, voce pode abrir o video diretamente no YouTube ou fazer uma busca rapida pelos botoes abaixo!
-                      </div>
 
                       {/* YouTube embed fallback and direct link buttons */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gold/5 border border-gold/15 rounded-xl p-3 text-xs">

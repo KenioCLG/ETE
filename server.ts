@@ -3,7 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
-import { getFallbackQuestions, getFallbackSimulado } from "./serverFallback";
+import { getFallbackQuestions, getFallbackSimulado, getEditalTopics } from "./serverFallback";
 import { isTecConfigured, buscarQuestoesPorAssunto, buscarQuestoesSimulado, listarMaterias, listarAssuntos } from "./tecConcursos";
 
 dotenv.config();
@@ -71,7 +71,7 @@ Como estruturar a resolução de um item sobre **${topic}**?
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || "3001", 10);
 
   app.use(express.json());
 
@@ -90,7 +90,7 @@ async function startServer() {
 
       const client = getAiClient();
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: `Você é um professor altamente didático e especialista em exames e processos seletivos do IFPE e ETE PE (Escolas Técnicas Estaduais de Pernambuco).
 Explique o assunto do edital "${topic}" de ${subject} de forma concisa, direta e focada em questões de prova para nível ETE Subsequente (ensino médio completo).
 
@@ -139,7 +139,7 @@ Como posso ajudar você com o seu plano de estudos hoje?`
       }));
 
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: contents,
         config: {
           systemInstruction: `Você é o "Tutor ETE", um assistente de inteligência artificial de alta performance especializado em ajudar candidatos a serem aprovados na prova subsequente da Escola Técnica Estadual (ETE) de Pernambuco.
@@ -189,7 +189,7 @@ As questões devem refletir fielmente o formato da ETE: cada questão deve ter u
 Forneça também uma explicação detalhada da resposta correta para cada questão.`;
 
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -243,13 +243,69 @@ Forneça também uma explicação detalhada da resposta correta para cada quest�
   });
 
   // API endpoint: Generate 20 custom exam questions (10 Port, 10 Mat)
-  app.get("/api/generate-simulado", (req, res) => {
+  app.get("/api/generate-simulado", async (req, res) => {
+    // Sem chave de IA: usa o banco local com amostragem ponderada por frequência
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
+      console.warn("Sem chave de API. Gerando simulado a partir do banco local ponderado.");
+      return res.json({ questions: getFallbackSimulado(), isFallback: true });
+    }
+
     try {
-      const questions = getFallbackSimulado();
+      // Seed de variância: garante que cada simulado gerado seja inédito
+      const randomSeed = Math.floor(Math.random() * 1000000);
+      const { port: editalPort, mat: editalMat } = getEditalTopics();
+      const prompt = `Gere um simulado completo para a prova ETE PE (Escola Técnica Estadual de Pernambuco - modalidade subsequente).
+Seed de Variância: ${randomSeed} (CRÍTICO: Use este número para garantir que as questões sejam 100% INÉDITAS e diferentes de qualquer outro simulado gerado anteriormente).
+
+O simulado deve conter exatamente 20 questões de múltipla escolha inéditas e de alto nível:
+- As 10 primeiras questões DEVEM ser de "Língua Portuguesa"
+- As 10 últimas questões DEVEM ser de "Matemática"
+
+REGRA OBRIGATÓRIA DE CONTEÚDO: as questões DEVEM cobrir EXCLUSIVAMENTE os temas do edital oficial listados abaixo. Não invente assuntos fora desta lista.
+A cada simulado, sorteie um subconjunto VARIADO destes temas, priorizando (por maior frequência nas provas anteriores da banca) Interpretação de Texto, Concordância/Regência/Crase, Ortografia/Pontuação em Português; e Porcentagem, Regra de Três, Equações/Sistemas, Áreas e Geometria em Matemática — sem nunca repetir o mesmo conjunto de questões de simulados anteriores.
+
+TEMAS DE LÍNGUA PORTUGUESA (edital oficial):
+${editalPort}
+
+TEMAS DE MATEMÁTICA (edital oficial):
+${editalMat}
+
+Vá além do básico: crie textos-base curtos inéditos para português e problemas matemáticos com cenários novos (nomes diferentes, valores diferentes, contextos criativos).
+Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explicação detalhada.`;
+
+      const client = getAiClient();
+      const response = await client.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          temperature: 0.9,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                subject: { type: Type.STRING, description: "Língua Portuguesa ou Matemática" },
+                question: { type: Type.STRING },
+                options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                answerIndex: { type: Type.INTEGER },
+                explanation: { type: Type.STRING },
+              },
+              required: ["subject", "question", "options", "answerIndex", "explanation"],
+            },
+          },
+        },
+      });
+
+      if (!response.text) throw new Error("Resposta vazia da IA.");
+      const questions = JSON.parse(response.text.trim()).map((q: any) => ({
+        ...q,
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random(),
+      }));
       res.json({ questions });
     } catch (error: any) {
-      console.error("Erro ao gerar simulado de fallback:", error);
-      res.status(500).json({ error: "Falha ao gerar simulado." });
+      console.warn("Erro ao gerar simulado com IA. Usando banco local ponderado:", error.message || error);
+      res.json({ questions: getFallbackSimulado(), isFallback: true });
     }
   });
 
@@ -341,7 +397,7 @@ Forneça também uma explicação detalhada da resposta correta para cada quest�
 
       const client = getAiClient();
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: `Voce e um professor especialista em ${subject || 'concursos'}.
 Explique de forma clara e didatica por que a alternativa correta desta questao e a letra ${letras[gabaritoIndex]}.
 

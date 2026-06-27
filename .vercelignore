@@ -1,0 +1,13 @@
+# Exclui arquivos stub da api/ do deploy — apenas api/index.ts é uma Serverless Function.
+# Todos os stubs abaixo são ignorados pelo Vercel (não contam no limite de 12 functions).
+api/explain.ts
+api/chat.ts
+api/generate-quiz.ts
+api/generate-simulado.ts
+api/tec/status.ts
+api/tec/materias.ts
+api/tec/questoes.ts
+api/tec/simulado.ts
+api/tec/explicar-gabarito.ts
+api/tec/assuntos/
+api/lib/

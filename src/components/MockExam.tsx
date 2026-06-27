@@ -15,19 +15,57 @@ import {
   Sparkles,
   GraduationCap,
 } from 'lucide-react';
+import { SimuladoResult } from '../types';
 
 export default function MockExam() {
-  const [examStarted, setExamStarted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(60 * 60); // 60 minutes
-  const [answers, setAnswers] = useState<{ [qId: string]: number }>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [examStarted, setExamStarted] = useState<boolean>(() => {
+    return localStorage.getItem('ete_exam_started') === 'true';
+  });
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => {
+    const saved = localStorage.getItem('ete_exam_seconds_left');
+    return saved ? parseInt(saved, 10) : 60 * 60;
+  });
+  const [answers, setAnswers] = useState<{ [qId: string]: number }>(() => {
+    const saved = localStorage.getItem('ete_exam_answers');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [submitted, setSubmitted] = useState<boolean>(() => {
+    return localStorage.getItem('ete_exam_submitted') === 'true';
+  });
   const [activeTab, setActiveTab] = useState<'port' | 'mat'>('port');
   const [filterMode, setFilterMode] = useState<'todos' | 'certos' | 'errados'>('todos');
-  const [questions, setQuestions] = useState<any[]>(MOCK_EXAM_QUESTIONS);
+  const [questions, setQuestions] = useState<any[]>(() => {
+    const saved = localStorage.getItem('ete_exam_questions');
+    return saved ? JSON.parse(saved) : MOCK_EXAM_QUESTIONS;
+  });
   const [loadingSimulado, setLoadingSimulado] = useState(false);
   const [isCustomSimulado, setIsCustomSimulado] = useState(false);
   const [tecConfigured, setTecConfigured] = useState(false);
   const [loadingTec, setLoadingTec] = useState(false);
+  const [history, setHistory] = useState<SimuladoResult[]>([]);
+  const [userNote, setUserNote] = useState('');
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+
+  const handleSubmitRef = useRef<any>(null);
+
+  // Sync state values to localStorage
+  useEffect(() => {
+    localStorage.setItem('ete_exam_started', String(examStarted));
+    localStorage.setItem('ete_exam_submitted', String(submitted));
+    localStorage.setItem('ete_exam_seconds_left', String(secondsLeft));
+    localStorage.setItem('ete_exam_answers', JSON.stringify(answers));
+    localStorage.setItem('ete_exam_questions', JSON.stringify(questions));
+  }, [examStarted, submitted, secondsLeft, answers, questions]);
+
+  // Load history from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('ete_simulado_history');
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
 
   const timerRef = useRef<any>(null);
 
@@ -39,17 +77,50 @@ export default function MockExam() {
       .catch(() => setTecConfigured(false));
   }, []);
 
+  // Mount timer synchronization based on target end time
+  useEffect(() => {
+    const savedStarted = localStorage.getItem('ete_exam_started') === 'true';
+    const savedSubmitted = localStorage.getItem('ete_exam_submitted') === 'true';
+    if (savedStarted && !savedSubmitted) {
+      const endTimeStr = localStorage.getItem('ete_exam_end_time');
+      if (endTimeStr) {
+        const endTime = parseInt(endTimeStr, 10);
+        const now = Date.now();
+        if (endTime > now) {
+          setSecondsLeft(Math.ceil((endTime - now) / 1000));
+        } else {
+          // Time expired! Submit automatically
+          setSecondsLeft(0);
+          if (handleSubmitRef.current) {
+            handleSubmitRef.current();
+          }
+        }
+      }
+    }
+  }, []);
+
+  // Timer tick loop
   useEffect(() => {
     if (examStarted && !submitted) {
       timerRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            handleSubmit();
-            return 0;
+        const now = Date.now();
+        const endTimeStr = localStorage.getItem('ete_exam_end_time');
+        let endTime = endTimeStr ? parseInt(endTimeStr, 10) : 0;
+        if (!endTime) {
+          endTime = now + secondsLeft * 1000;
+          localStorage.setItem('ete_exam_end_time', String(endTime));
+        }
+
+        const msLeft = endTime - now;
+        if (msLeft <= 0) {
+          clearInterval(timerRef.current);
+          setSecondsLeft(0);
+          if (handleSubmitRef.current) {
+            handleSubmitRef.current();
           }
-          return prev - 1;
-        });
+        } else {
+          setSecondsLeft(Math.ceil(msLeft / 1000));
+        }
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -60,14 +131,25 @@ export default function MockExam() {
     };
   }, [examStarted, submitted]);
 
-  const handleStartExam = () => {
-    setQuestions(MOCK_EXAM_QUESTIONS);
-    setIsCustomSimulado(false);
+  // Helper to start exam and setup localStorage keys
+  const startExamState = (newQuestions: any[], isCustom: boolean) => {
+    setQuestions(newQuestions);
+    setIsCustomSimulado(isCustom);
     setAnswers({});
     setSubmitted(false);
     setSecondsLeft(60 * 60);
+    localStorage.setItem('ete_exam_started', 'true');
+    localStorage.setItem('ete_exam_submitted', 'false');
+    localStorage.setItem('ete_exam_seconds_left', String(60 * 60));
+    localStorage.setItem('ete_exam_answers', '{}');
+    localStorage.setItem('ete_exam_questions', JSON.stringify(newQuestions));
+    localStorage.setItem('ete_exam_end_time', String(Date.now() + 60 * 60 * 1000));
     setExamStarted(true);
     setActiveTab('port');
+  };
+
+  const handleStartExam = () => {
+    startExamState(MOCK_EXAM_QUESTIONS, false);
   };
 
   const handleStartCustomExam = async () => {
@@ -80,13 +162,7 @@ export default function MockExam() {
           ...q,
           id: q.subject === 'Língua Portuguesa' ? `port-ai-q-${index}` : `mat-ai-q-${index}`
         }));
-        setQuestions(formattedQuestions);
-        setIsCustomSimulado(true);
-        setAnswers({});
-        setSubmitted(false);
-        setSecondsLeft(60 * 60);
-        setExamStarted(true);
-        setActiveTab('port');
+        startExamState(formattedQuestions, true);
       } else {
         console.warn("Fallback ao gerar simulado. Usando simulado padrão.");
         handleStartExam();
@@ -97,6 +173,19 @@ export default function MockExam() {
     } finally {
       setLoadingSimulado(false);
     }
+  };
+
+  const handleBackToPanel = () => {
+    setExamStarted(false);
+    setSubmitted(false);
+    setQuestions([]);
+    setAnswers({});
+    localStorage.removeItem('ete_exam_started');
+    localStorage.removeItem('ete_exam_submitted');
+    localStorage.removeItem('ete_exam_seconds_left');
+    localStorage.removeItem('ete_exam_answers');
+    localStorage.removeItem('ete_exam_questions');
+    localStorage.removeItem('ete_exam_end_time');
   };
 
   const handleStartTecExam = async () => {
@@ -122,13 +211,7 @@ export default function MockExam() {
         const allQuestions = [...portFormatted, ...matFormatted];
 
         if (allQuestions.length > 0) {
-          setQuestions(allQuestions);
-          setIsCustomSimulado(true);
-          setAnswers({});
-          setSubmitted(false);
-          setSecondsLeft(60 * 60);
-          setExamStarted(true);
-          setActiveTab('port');
+          startExamState(allQuestions, true);
         } else {
           console.warn("Sem questoes do TecConcursos. Usando simulado padrao.");
           handleStartExam();
@@ -152,7 +235,76 @@ export default function MockExam() {
   const handleSubmit = () => {
     setSubmitted(true);
     if (timerRef.current) clearInterval(timerRef.current);
+
+    // Clear active exam local storage keys
+    localStorage.removeItem('ete_exam_end_time');
+    localStorage.removeItem('ete_exam_started');
+    localStorage.removeItem('ete_exam_seconds_left');
+    localStorage.removeItem('ete_exam_answers');
+    localStorage.removeItem('ete_exam_questions');
+    localStorage.setItem('ete_exam_submitted', 'true');
+
+    // Compute stats to save in history
+    const portQs = questions.filter(q => q.subject === 'Língua Portuguesa');
+    const matQs = questions.filter(q => q.subject === 'Matemática');
+    const cPort = portQs.filter(q => answers[q.id] === q.answerIndex).length;
+    const cMat = matQs.filter(q => answers[q.id] === q.answerIndex).length;
+    
+    const isElimByPct = (cPort + cMat) < 4;
+    const isElimByZeroPort = cPort === 0;
+    const isElimByZeroMat = cMat === 0;
+    const isAppr = !isElimByPct && !isElimByZeroPort && !isElimByZeroMat;
+
+    const newResult: SimuladoResult = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      date: new Date().toISOString(),
+      scorePort: cPort,
+      scoreMat: cMat,
+      totalPort: portQs.length,
+      totalMat: matQs.length,
+      passed: isAppr
+    };
+
+    setHistory(prev => {
+      const updated = [newResult, ...prev];
+      localStorage.setItem('ete_simulado_history', JSON.stringify(updated));
+      return updated;
+    });
   };
+
+  const handleGetAIFeedback = async () => {
+    const latestResult = history[0];
+    if (!latestResult) return;
+
+    setLoadingFeedback(true);
+    try {
+      const wrongQs = questions.filter(q => answers[q.id] !== q.answerIndex);
+      const res = await fetch('/api/evaluate-simulado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results: { ...latestResult, wrongQuestions: wrongQs }, userNote })
+      });
+      const data = await res.json();
+      
+      if (data.feedback) {
+        setHistory(prev => {
+          const copy = [...prev];
+          copy[0] = { ...copy[0], userNote, aiFeedback: data.feedback };
+          localStorage.setItem('ete_simulado_history', JSON.stringify(copy));
+          return copy;
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
+
+  // Keep ref up to date
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  }, [questions, answers]);
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -249,11 +401,71 @@ export default function MockExam() {
                 disabled={loadingTec || loadingSimulado}
                 className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md transition duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <GraduationCap className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
                 {loadingTec ? 'Buscando Questões...' : 'Simulado TecConcursos'}
               </button>
             )}
           </div>
+
+          {/* Histórico de Provas */}
+          {history.length > 0 && (
+            <div className="mt-12 max-w-2xl mx-auto space-y-4 text-left">
+              <h3 className="text-sm font-serif italic text-gold border-b border-dark-border pb-2">Seu Histórico de Simulados</h3>
+              <div className="space-y-3">
+                {history.map((res, i) => {
+                  const dateStr = new Date(res.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                  return (
+                    <div key={res.id} className="space-y-2">
+                      <div className="bg-dark-bg/60 border border-dark-border rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div>
+                          <div className="text-[10px] text-dark-muted font-mono">{dateStr}</div>
+                          <div className="text-sm font-bold text-dark-text mt-1">Simulado #{history.length - i}</div>
+                        </div>
+                        <div className="flex gap-4 text-xs font-mono">
+                          <div className="text-center">
+                            <div className="text-dark-muted text-[10px] uppercase">Português</div>
+                            <div className={res.scorePort > 0 ? "text-emerald-400" : "text-rose-400"}>{res.scorePort}/{res.totalPort}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-dark-muted text-[10px] uppercase">Matemática</div>
+                            <div className={res.scoreMat > 0 ? "text-emerald-400" : "text-rose-400"}>{res.scoreMat}/{res.totalMat}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-dark-muted text-[10px] uppercase">Total</div>
+                            <div className="text-gold">{res.scorePort + res.scoreMat}/20</div>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                          {res.passed ? (
+                            <span className="inline-flex items-center gap-1 bg-emerald-950/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-900/50">
+                              <CheckCircle className="w-3.5 h-3.5" /> Aprovado
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-rose-950/30 text-rose-400 px-3 py-1 rounded-full text-xs font-bold border border-rose-900/50">
+                              <XCircle className="w-3.5 h-3.5" /> Eliminado
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Render AI Feedback if exists */}
+                      {res.aiFeedback && (
+                        <div className="bg-dark-bg p-4 rounded-xl border border-dark-border text-xs">
+                          <div className="font-serif italic text-gold mb-2 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" /> Laudo Pedagógico da IA
+                          </div>
+                          {res.userNote && (
+                            <div className="text-dark-muted mb-3 italic">"Sua observação: {res.userNote}"</div>
+                          )}
+                          <div className="text-dark-text whitespace-pre-wrap">{res.aiFeedback}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* Active exam/submitted state */
@@ -284,12 +496,21 @@ export default function MockExam() {
                 Entregar Prova
               </button>
             ) : (
-              <button
-                onClick={handleStartExam}
-                className="px-5 py-2 border border-dark-border hover:bg-dark-card-lighter text-gold font-bold text-xs rounded-lg transition duration-200 flex items-center gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Reiniciar Simulado
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleBackToPanel}
+                  className="px-4 py-2 border border-dark-border hover:bg-dark-card-lighter text-dark-muted hover:text-dark-text font-bold text-xs rounded-lg transition duration-200"
+                >
+                  Voltar ao Painel
+                </button>
+                <button
+                  onClick={handleStartCustomExam}
+                  disabled={loadingSimulado}
+                  className="px-4 py-2 bg-gold hover:bg-gold-hover text-dark-bg font-extrabold text-xs rounded-lg shadow-sm transition duration-200 flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {loadingSimulado ? 'Gerando...' : <><Sparkles className="w-3.5 h-3.5" /> Novo Simulado IA</>}
+                </button>
+              </div>
             )}
           </div>
 
@@ -356,6 +577,40 @@ export default function MockExam() {
                   )}
                 </div>
               </div>
+
+              {/* AI Feedback Section for current exam */}
+              {history[0] && history[0].id && !history[0].aiFeedback && (
+                <div className="bg-dark-bg p-4 rounded-xl border border-dark-border space-y-3 mt-4">
+                  <h4 className="font-serif italic text-sm text-gold flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Análise IA da sua Prova
+                  </h4>
+                  <p className="text-xs text-dark-muted">Adicione uma nota sobre como você se sentiu nesta prova (opcional) para o Tutor IA analisar junto com os seus erros.</p>
+                  <textarea 
+                    value={userNote}
+                    onChange={(e) => setUserNote(e.target.value)}
+                    placeholder="Ex: Achei matemática muito difícil, faltou tempo para ler tudo..."
+                    className="w-full bg-dark-card border border-dark-border rounded-lg p-3 text-xs text-dark-text focus:border-gold/50 outline-none min-h-[80px]"
+                  />
+                  <button 
+                    onClick={handleGetAIFeedback}
+                    disabled={loadingFeedback}
+                    className="bg-gold hover:bg-gold-hover text-dark-bg font-bold text-xs px-4 py-2 rounded-lg transition"
+                  >
+                    {loadingFeedback ? 'Gerando Laudo...' : 'Receber Laudo Pedagógico'}
+                  </button>
+                </div>
+              )}
+
+              {history[0] && history[0].aiFeedback && (
+                <div className="bg-dark-bg p-4 rounded-xl border border-gold/30 space-y-3 mt-4">
+                   <h4 className="font-serif italic text-sm text-gold flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Laudo Pedagógico da IA
+                  </h4>
+                  <div className="text-xs text-dark-text whitespace-pre-wrap leading-relaxed">
+                    {history[0].aiFeedback}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -46,3 +46,15 @@ export interface EditalMilestone {
   description: string;
   type: 'inscricao' | 'prova' | 'resultado' | 'matricula' | 'aulas';
 }
+
+export interface SimuladoResult {
+  id: string;
+  date: string;
+  scorePort: number;
+  scoreMat: number;
+  totalPort: number;
+  totalMat: number;
+  passed: boolean;
+  userNote?: string;
+  aiFeedback?: string;
+}

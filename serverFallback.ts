@@ -1,11 +1,102 @@
 // Fallback Question Bank for ETE Subsequente
 // This ensures that even if the Gemini API is unavailable (e.g., 503 error), the user can always generate high-quality, relevant study questions.
 
+import { INITIAL_SYLLABUS } from "./src/data/syllabus";
+
+// Extrai os temas oficiais do edital (a "fonte da verdade" do conteúdo da prova),
+// separados por disciplina, para ancorar a geração de questões pela IA.
+export function getEditalTopics(): { port: string; mat: string } {
+  const port = INITIAL_SYLLABUS.filter((t) => t.subject === "Língua Portuguesa")
+    .map((t) => `- ${t.title}`)
+    .join("\n");
+  const mat = INITIAL_SYLLABUS.filter((t) => t.subject === "Matemática")
+    .map((t) => `- ${t.title}`)
+    .join("\n");
+  return { port, mat };
+}
+
 export interface FallbackQuestion {
   question: string;
   options: string[];
   answerIndex: number;
   explanation: string;
+  weight?: number; // 1 to 10 based on exam frequency
+}
+
+function weightedSample(pool: FallbackQuestion[], count: number): FallbackQuestion[] {
+  const selected: FallbackQuestion[] = [];
+  const poolCopy = [...pool];
+
+  while (selected.length < count && poolCopy.length > 0) {
+    let totalWeight = poolCopy.reduce((sum, q) => sum + (q.weight || 1), 0);
+    let randomVal = Math.random() * totalWeight;
+
+    for (let i = 0; i < poolCopy.length; i++) {
+      randomVal -= (poolCopy[i].weight || 1);
+      if (randomVal <= 0) {
+        selected.push(poolCopy[i]);
+        poolCopy.splice(i, 1);
+        break;
+      }
+    }
+  }
+  return selected;
+}
+
+// Embaralha um array (Fisher-Yates) — usado para variar a ordem a cada simulado.
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Embaralha as alternativas de uma questão remapeando o answerIndex.
+// Isso faz cada questão "parecer" diferente mesmo vinda do mesmo banco.
+function shuffleOptions(q: FallbackQuestion): FallbackQuestion {
+  const letras = ["A", "B", "C", "D", "E"];
+  // Remove o prefixo "A) " original para reordenar limpo.
+  const semPrefixo = q.options.map((opt) => opt.replace(/^[A-E]\)\s*/, ""));
+  const correta = semPrefixo[q.answerIndex];
+  const ordem = shuffle(semPrefixo.map((_, i) => i));
+  const novasOpcoes = ordem.map((origIdx, novoIdx) => `${letras[novoIdx]}) ${semPrefixo[origIdx]}`);
+  const novoAnswerIndex = ordem.findIndex((origIdx) => semPrefixo[origIdx] === correta);
+  return { ...q, options: novasOpcoes, answerIndex: novoAnswerIndex };
+}
+
+// "Algoritmo inteligente": peso de incidência por assunto, derivado da
+// frequência observada em provas subsequentes anteriores da banca.
+// Quanto maior o peso, maior a chance do assunto cair no simulado.
+const FREQUENCIA_ASSUNTOS: { padrao: RegExp; weight: number }[] = [
+  // Português (mais cobrados primeiro)
+  { padrao: /concord/i, weight: 9 },
+  { padrao: /conota|figura|sentido/i, weight: 6 },
+  { padrao: /regência|regencia|crase|lacuna/i, weight: 8 },
+  { padrao: /acento|ortográfic|ortografic/i, weight: 7 },
+  { padrao: /vírgula|virgula|pontuação|pontuacao/i, weight: 7 },
+  { padrao: /conjunção|conjuncao|concess|embora/i, weight: 5 },
+  { padrao: /pronome relativo|cujas|cujo/i, weight: 4 },
+  { padrao: /formação|formacao|derivaç|derivac/i, weight: 4 },
+  // Matemática (mais cobrados primeiro)
+  { padrao: /porcent|%|desconto|aumento/i, weight: 9 },
+  { padrao: /regra de três|torneira|vazão|vazao/i, weight: 8 },
+  { padrao: /fração|fracao|3\/5/i, weight: 7 },
+  { padrao: /área|area|perímetro|perimetro|retangular|circular|raio/i, weight: 7 },
+  { padrao: /sistema|equaç|equac|caderno|caneta/i, weight: 6 },
+  { padrao: /algébric|algebric|valor numérico|valor numerico/i, weight: 5 },
+  { padrao: /trigon|sen\(|cos\(|rampa|ângulo|angulo/i, weight: 5 },
+];
+
+// Aplica o peso de frequência a cada questão do banco.
+function comFrequencia(pool: FallbackQuestion[]): FallbackQuestion[] {
+  return pool.map((q) => {
+    const match = FREQUENCIA_ASSUNTOS.find(
+      (f) => f.padrao.test(q.question) || f.padrao.test(q.explanation)
+    );
+    return { ...q, weight: match ? match.weight : 3 };
+  });
 }
 
 export const FALLBACK_PORTUGUESE: FallbackQuestion[] = [
@@ -250,41 +341,31 @@ export function getFallbackQuestions(topic: string, subject: string): FallbackQu
 }
 
 export function getFallbackSimulado(): FallbackQuestion[] {
-  // Let's return exactly 20 questions (10 Portuguese + 10 Mathematics)
-  // Let's shuffle our pools to provide variation!
-  const shuffledPort = [...FALLBACK_PORTUGUESE].sort(() => 0.5 - Math.random());
-  const shuffledMat = [...FALLBACK_MATHEMATICS].sort(() => 0.5 - Math.random());
+  // Retorna exatamente 20 questões (10 Português + 10 Matemática).
+  // 1) Aplica o peso de incidência por assunto (frequência de provas anteriores).
+  // 2) Faz amostragem ponderada — assuntos mais cobrados têm mais chance.
+  // 3) Embaralha alternativas e ordem para que cada simulado pareça inédito.
+  const portPool = comFrequencia(FALLBACK_PORTUGUESE);
+  const matPool = comFrequencia(FALLBACK_MATHEMATICS);
 
-  const portSelected = shuffledPort.slice(0, 10);
-  const matSelected = shuffledMat.slice(0, 10);
+  const portSelected = weightedSample(portPool, 10);
+  const matSelected = weightedSample(matPool, 10);
 
-  // If we don't have 10, fill up by repeating or using other questions.
+  // Se o banco for menor que 10, completa com variações marcadas como prática extra.
+  let extraCount = 0;
   while (portSelected.length < 10) {
-    const q = FALLBACK_PORTUGUESE[portSelected.length % FALLBACK_PORTUGUESE.length];
+    const q = shuffle(portPool)[extraCount++ % portPool.length];
     portSelected.push({ ...q, question: `[Prática Extra] ${q.question}` });
   }
-
+  extraCount = 0;
   while (matSelected.length < 10) {
-    const q = FALLBACK_MATHEMATICS[matSelected.length % FALLBACK_MATHEMATICS.length];
+    const q = shuffle(matPool)[extraCount++ % matPool.length];
     matSelected.push({ ...q, question: `[Prática Extra] ${q.question}` });
   }
 
-  const result: FallbackQuestion[] = [];
-  
-  // Combine them with unique IDs and subject names
-  portSelected.forEach((q, i) => {
-    result.push({
-      ...q,
-      question: q.question
-    });
-  });
+  // Embaralha alternativas e a ordem das questões dentro de cada disciplina.
+  const port = shuffle(portSelected).map(shuffleOptions);
+  const mat = shuffle(matSelected).map(shuffleOptions);
 
-  matSelected.forEach((q, i) => {
-    result.push({
-      ...q,
-      question: q.question
-    });
-  });
-
-  return result;
+  return [...port, ...mat];
 }
