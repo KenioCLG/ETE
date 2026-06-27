@@ -166,6 +166,11 @@ export default function App() {
     }
   };
 
+  // ── Progresso real do edital (tópicos revisados / total) ──
+  const completionPct = topics.length
+    ? Math.round((topics.filter(t => t.status === 'Revisado').length / topics.length) * 100)
+    : 0;
+
 
 
   return (
@@ -333,11 +338,14 @@ export default function App() {
                   <p className="text-[10px] leading-relaxed text-dark-muted relative">
                     Mantenha o foco. Cada tópico te aproxima das <span className="text-gold/80 font-semibold">54 ETEs de PE</span>.
                   </p>
-                  {/* Bottom progress bar decoration */}
+                  {/* Bottom progress bar — progresso real do edital */}
                   <div className="mt-2.5 h-0.5 rounded-full bg-dark-border overflow-hidden">
-                    <div className="h-full w-[65%] rounded-full bg-gradient-to-r from-gold/60 to-gold/30" />
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-gold/60 to-gold/30 transition-all duration-500"
+                      style={{ width: `${completionPct}%` }}
+                    />
                   </div>
-                  <p className="text-[9px] text-dark-muted/60 mt-1 font-mono">65% concluído</p>
+                  <p className="text-[9px] text-dark-muted/60 mt-1 font-mono">{completionPct}% concluído</p>
                 </div>
               </div>
             </>
