@@ -31,7 +31,7 @@ html {
 body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  overscroll-behavior: none;
+  overscroll-behavior-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
