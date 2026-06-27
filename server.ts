@@ -255,57 +255,53 @@ Forneça também uma explicação detalhada da resposta correta para cada quest�
     }
 
     try {
-      // Seed de variância + 5 temas sorteados do edital: garante simulado inédito a cada clique
-      const randomSeed = Math.floor(Math.random() * 1000000);
       const { port: editalPort, mat: editalMat } = getRandomEditalTopics(5);
-      const prompt = `Gere um simulado completo para a prova ETE PE (Escola Técnica Estadual de Pernambuco - modalidade subsequente).
-Seed de Variância: ${randomSeed} (CRÍTICO: Use este número para garantir que as questões sejam 100% INÉDITAS).
 
-O simulado deve conter exatamente 20 questões de múltipla escolha inéditas e de alto nível:
-- As 10 primeiras questões DEVEM ser de "Língua Portuguesa"
-- As 10 últimas questões DEVEM ser de "Matemática"
-
-REGRA OBRIGATÓRIA DE CONTEÚDO: Para GARANTIR A VARIEDADE e não repetir questões de simulados anteriores, eu SORTEEI 5 temas específicos de cada matéria do edital.
-Você DEVE criar as 20 questões (2 de cada tema) EXCLUSIVAMENTE focadas nestes assuntos exatos listados abaixo:
-
-TEMAS SORTEADOS DE LÍNGUA PORTUGUESA:
-${editalPort}
-
-TEMAS SORTEADOS DE MATEMÁTICA:
-${editalMat}
-
-Vá além do básico: crie textos-base curtos inéditos para português e problemas matemáticos com cenários novos (nomes diferentes, valores diferentes, contextos criativos).
-Cada questão deve ter 5 alternativas (A-E) e apenas 1 correta, com uma explicação detalhada.`;
+      const schema10 = {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING },
+            options: { type: Type.ARRAY, items: { type: Type.STRING } },
+            answerIndex: { type: Type.INTEGER },
+            explanation: { type: Type.STRING },
+          },
+          required: ["question", "options", "answerIndex", "explanation"],
+        },
+      };
 
       const client = getAiClient();
-      const response = await client.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          temperature: 0.9,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                subject: { type: Type.STRING, description: "Língua Portuguesa ou Matemática" },
-                question: { type: Type.STRING },
-                options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                answerIndex: { type: Type.INTEGER },
-                explanation: { type: Type.STRING },
-              },
-              required: ["subject", "question", "options", "answerIndex", "explanation"],
-            },
-          },
-        },
-      });
+      const genSubject = async (subject: string, topics: string) => {
+        const seed = Math.floor(Math.random() * 1000000);
+        const resp = await client.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: `Gere EXATAMENTE 10 questões inéditas de múltipla escolha de "${subject}" para a prova ETE PE (subsequente).
+Seed de Variância: ${seed} (use para garantir que as questões sejam 100% INÉDITAS e diferentes de simulados anteriores).
+Crie 2 questões para CADA um destes 5 temas sorteados do edital (total 10):
+${topics}
+Cada questão deve ter enunciado claro (com texto-base curto inédito quando fizer sentido), 5 alternativas (A-E), apenas 1 correta e explicação detalhada. Use sempre cenários, nomes e valores novos.`,
+          config: { temperature: 0.95, responseMimeType: "application/json", responseSchema: schema10 },
+        });
+        if (!resp.text) throw new Error(`Resposta vazia (${subject}).`);
+        return (JSON.parse(resp.text.trim()) as any[]).slice(0, 10).map((q) => ({ ...q, subject }));
+      };
 
-      if (!response.text) throw new Error("Resposta vazia da IA.");
-      const questions = JSON.parse(response.text.trim()).map((q: any) => ({
+      // Disciplinas em paralelo — metade do tempo de uma chamada única de 20 questões.
+      const work = Promise.all([
+        genSubject("Língua Portuguesa", editalPort),
+        genSubject("Matemática", editalMat),
+      ]);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("AI_TIMEOUT")), 50000)
+      );
+      const [port, mat] = (await Promise.race([work, timeoutPromise])) as any[];
+
+      const questions = [...port, ...mat].map((q: any, i: number) => ({
         ...q,
-        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random(),
+        id: `${q.subject === "Matemática" ? "mat" : "port"}-${i}-${Math.random().toString(36).slice(2)}`,
       }));
+      if (questions.length < 20) throw new Error(`IA retornou ${questions.length} questões (esperado 20).`);
       res.json({ questions });
     } catch (error: any) {
       console.warn("Erro ao gerar simulado com IA. Usando banco local ponderado:", error.message || error);
