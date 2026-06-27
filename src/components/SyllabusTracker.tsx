@@ -121,6 +121,14 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
   const [aiError, setAiError] = useState<string | null>(null);
   const [customVideos, setCustomVideos] = useState<{ [topicId: string]: any[] }>({});
 
+  // TecConcursos states
+  const [tecConfigured, setTecConfigured] = useState<boolean>(false);
+  const [tecLoading, setTecLoading] = useState<string | null>(null);
+  const [tecQuiz, setTecQuiz] = useState<{ [topicId: string]: QuizQuestion[] }>({});
+  const [tecQuizAnswers, setTecQuizAnswers] = useState<{ [topicId: string]: { [qIndex: number]: number } }>({});
+  const [tecQuizSubmitted, setTecQuizSubmitted] = useState<{ [topicId: string]: boolean }>({});
+  const [tecSource, setTecSource] = useState<{ [topicId: string]: string }>({});
+
   // Pomodoro States
   const [pomoActive, setPomoActive] = useState<boolean>(false);
   const [pomoTopicId, setPomoTopicId] = useState<string | null>(null);
@@ -220,6 +228,12 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
         console.error(e);
       }
     }
+
+    // Check TecConcursos availability
+    fetch('/api/tec/status')
+      .then(r => r.json())
+      .then(data => setTecConfigured(data.configured))
+      .catch(() => setTecConfigured(false));
   }, []);
 
   const getCombinedVideos = (topicId: string): any[] => {
@@ -355,6 +369,108 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
     setAiQuizSubmitted(prev => ({ ...prev, [topicId]: true }));
   };
 
+  // TecConcursos Quiz Logic
+  const handleTecQuiz = async (topic: SyllabusTopic) => {
+    if (tecQuiz[topic.id]) {
+      const copy = { ...tecQuiz };
+      delete copy[topic.id];
+      setTecQuiz(copy);
+      return;
+    }
+
+    const resource = STUDY_RESOURCES[topic.id];
+    if (!resource) return;
+
+    setTecLoading(topic.id);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/tec/questoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tecQuery: resource.tecQuery,
+          subject: topic.subject,
+          quantidade: 3
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Falha ao buscar questoes do TecConcursos');
+      }
+
+      // Formatar questoes do TecConcursos para o formato QuizQuestion
+      const questoes = data.questoes || [];
+      if (!Array.isArray(questoes) || questoes.length === 0) {
+        throw new Error('Nenhuma questao retornada pelo TecConcursos');
+      }
+
+      const formatted: QuizQuestion[] = questoes.slice(0, 3).map((q: any) => ({
+        question: q.enunciado || q.question || q.texto || String(q),
+        options: q.alternativas || q.options || [],
+        answerIndex: q.gabaritoIndex ?? q.answerIndex ?? 0,
+        explanation: q.explanation || `Gabarito: Alternativa ${['A','B','C','D','E'][q.gabaritoIndex ?? q.answerIndex ?? 0]}. Clique em "Explicar Gabarito" para ver a resolucao detalhada.`
+      }));
+
+      setTecQuiz(prev => ({ ...prev, [topic.id]: formatted }));
+      setTecQuizAnswers(prev => ({ ...prev, [topic.id]: {} }));
+      setTecQuizSubmitted(prev => ({ ...prev, [topic.id]: false }));
+      setTecSource(prev => ({ ...prev, [topic.id]: `${data.total || '?'} questoes disponiveis | ${data.assunto || resource.tecQuery}` }));
+    } catch (err: any) {
+      setAiError(err.message || 'Erro ao buscar questoes do TecConcursos.');
+    } finally {
+      setTecLoading(null);
+    }
+  };
+
+  const handleSelectTecAnswer = (topicId: string, qIndex: number, optIndex: number) => {
+    setTecQuizAnswers(prev => ({
+      ...prev,
+      [topicId]: {
+        ...(prev[topicId] || {}),
+        [qIndex]: optIndex
+      }
+    }));
+  };
+
+  const handleSubmitTecQuiz = (topicId: string) => {
+    setTecQuizSubmitted(prev => ({ ...prev, [topicId]: true }));
+  };
+
+  // Solicitar explicacao do gabarito via Gemini
+  const handleExplicarGabarito = async (topicId: string, qIndex: number) => {
+    const quiz = tecQuiz[topicId];
+    if (!quiz || !quiz[qIndex]) return;
+
+    const q = quiz[qIndex];
+    try {
+      const response = await fetch('/api/tec/explicar-gabarito', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enunciado: q.question,
+          alternativas: q.options,
+          gabaritoIndex: q.answerIndex,
+          subject: topics.find(t => t.id === topicId)?.subject || ''
+        }),
+      });
+
+      const data = await response.json();
+      if (data.explanation) {
+        setTecQuiz(prev => {
+          const updated = { ...prev };
+          const updatedQuiz = [...updated[topicId]];
+          updatedQuiz[qIndex] = { ...updatedQuiz[qIndex], explanation: data.explanation };
+          updated[topicId] = updatedQuiz;
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.warn('Erro ao buscar explicacao:', err);
+    }
+  };
+
   // Export Progress Backup as JSON
   const handleExportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(topics, null, 2));
@@ -392,6 +508,7 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
     const isExpanded = expandedTopicId === topic.id;
     const hasExplanation = !!aiExplanation[topic.id];
     const hasQuiz = !!aiQuiz[topic.id];
+    const hasTecQuiz = !!tecQuiz[topic.id];
     const resource = STUDY_RESOURCES[topic.id];
 
     return (
@@ -745,6 +862,25 @@ export default function SyllabusTracker({ topics, onUpdateTopic, onImportData }:
                   )}
                   <span>{hasQuiz ? 'Fechar Prática' : 'Gerar Questões IA'}</span>
                 </button>
+
+                {tecConfigured && (
+                  <button
+                    disabled={tecLoading !== null || aiLoadingTopicId !== null}
+                    onClick={() => handleTecQuiz(topic)}
+                    className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg shadow-sm border transition duration-200 ${
+                      hasTecQuiz
+                        ? 'bg-emerald-950/20 text-emerald-400 border-emerald-900/30 hover:bg-emerald-950/30'
+                        : 'bg-dark-bg hover:bg-dark-card text-emerald-400 border-emerald-900/20'
+                    }`}
+                  >
+                    {tecLoading === topic.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <GraduationCap className="w-3.5 h-3.5" />
+                    )}
+                    <span>{hasTecQuiz ? 'Fechar TecConcursos' : 'TecConcursos'}</span>
+                  </button>
+                )}
               </div>
             </div>
 

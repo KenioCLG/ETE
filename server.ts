@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import { getFallbackQuestions, getFallbackSimulado } from "./serverFallback";
+import { isTecConfigured, buscarQuestoesPorAssunto, buscarQuestoesSimulado, listarMaterias, listarAssuntos } from "./tecConcursos";
 
 dotenv.config();
 
@@ -249,6 +250,120 @@ Forneça também uma explicação detalhada da resposta correta para cada quest�
     } catch (error: any) {
       console.error("Erro ao gerar simulado de fallback:", error);
       res.status(500).json({ error: "Falha ao gerar simulado." });
+    }
+  });
+
+  // ─── TEC CONCURSOS PROXY ENDPOINTS ───
+
+  // Status: verifica se o cookie do Tec Concursos esta configurado
+  app.get("/api/tec/status", (req, res) => {
+    res.json({ configured: isTecConfigured() });
+  });
+
+  // Listar materias disponiveis no Tec Concursos
+  app.get("/api/tec/materias", async (req, res) => {
+    try {
+      if (!isTecConfigured()) {
+        return res.status(400).json({ error: "TEC_SESSION_COOKIE nao configurado no .env" });
+      }
+      const materias = await listarMaterias();
+      res.json({ materias });
+    } catch (error: any) {
+      console.warn("Erro ao listar materias TecConcursos:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Listar assuntos de uma materia
+  app.get("/api/tec/assuntos/:materiaId", async (req, res) => {
+    try {
+      if (!isTecConfigured()) {
+        return res.status(400).json({ error: "TEC_SESSION_COOKIE nao configurado no .env" });
+      }
+      const materiaId = parseInt(req.params.materiaId, 10);
+      const assuntos = await listarAssuntos(materiaId);
+      res.json({ assuntos });
+    } catch (error: any) {
+      console.warn("Erro ao listar assuntos TecConcursos:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Buscar questoes por assunto do edital (usado pelo quiz do SyllabusTracker)
+  app.post("/api/tec/questoes", async (req, res) => {
+    try {
+      if (!isTecConfigured()) {
+        return res.status(400).json({ error: "TEC_SESSION_COOKIE nao configurado no .env", notConfigured: true });
+      }
+      const { tecQuery, subject, quantidade } = req.body;
+      if (!tecQuery || !subject) {
+        return res.status(400).json({ error: "Faltando parametros: 'tecQuery' e 'subject'." });
+      }
+      const resultado = await buscarQuestoesPorAssunto(tecQuery, subject, quantidade || 3);
+      res.json(resultado);
+    } catch (error: any) {
+      console.warn("Erro ao buscar questoes TecConcursos:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Buscar questoes para simulado completo (10 Port + 10 Mat)
+  app.get("/api/tec/simulado", async (req, res) => {
+    try {
+      if (!isTecConfigured()) {
+        return res.status(400).json({ error: "TEC_SESSION_COOKIE nao configurado no .env", notConfigured: true });
+      }
+      const resultado = await buscarQuestoesSimulado();
+      res.json(resultado);
+    } catch (error: any) {
+      console.warn("Erro ao gerar simulado TecConcursos:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Gerar explicacao do gabarito via Gemini (para questoes do TecConcursos que nao tem explicacao)
+  app.post("/api/tec/explicar-gabarito", async (req, res) => {
+    try {
+      const { enunciado, alternativas, gabaritoIndex, subject } = req.body;
+      if (!enunciado || !alternativas) {
+        return res.status(400).json({ error: "Faltando parametros." });
+      }
+
+      if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
+        const letras = ['A', 'B', 'C', 'D', 'E'];
+        return res.json({
+          explanation: `Gabarito: Alternativa ${letras[gabaritoIndex] || '?'}. Para uma explicacao detalhada, configure a chave GEMINI_API_KEY no .env.`
+        });
+      }
+
+      const letras = ['A', 'B', 'C', 'D', 'E'];
+      const alternativasTexto = alternativas.map((a: string, i: number) => `${letras[i]}) ${a}`).join('\n');
+
+      const client = getAiClient();
+      const response = await client.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `Voce e um professor especialista em ${subject || 'concursos'}.
+Explique de forma clara e didatica por que a alternativa correta desta questao e a letra ${letras[gabaritoIndex]}.
+
+QUESTAO:
+${enunciado}
+
+ALTERNATIVAS:
+${alternativasTexto}
+
+RESPOSTA CORRETA: ${letras[gabaritoIndex]}) ${alternativas[gabaritoIndex]}
+
+Forneça uma explicacao passo a passo de por que essa e a resposta correta e por que as outras estao erradas. Seja conciso mas completo.`,
+      });
+
+      const text = response.text || `Gabarito: Alternativa ${letras[gabaritoIndex]}.`;
+      res.json({ explanation: text });
+    } catch (error: any) {
+      console.warn("Erro ao gerar explicacao:", error.message);
+      const letras = ['A', 'B', 'C', 'D', 'E'];
+      res.json({
+        explanation: `Gabarito: Alternativa ${letras[req.body?.gabaritoIndex] || '?'}. Explicacao indisponivel no momento.`
+      });
     }
   });
 
