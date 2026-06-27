@@ -240,7 +240,7 @@ Cada questão deve ter enunciado claro (com texto-base curto inédito quando fiz
     return res.json({ questions });
   } catch (error: any) {
     console.warn("/api/generate-simulado fallback:", error.message);
-    return res.json({ questions: getFallbackSimulado(), isFallback: true });
+    return res.json({ questions: getFallbackSimulado(), isFallback: true, _debug: String(error?.message || error).slice(0, 400) });
   }
 });
 
