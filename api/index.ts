@@ -59,6 +59,32 @@ function isAiConfigured(): boolean {
   return !!(key && key !== "MY_GEMINI_API_KEY");
 }
 
+// Modelos em ordem de preferência — se o primeiro estiver sobrecarregado (503), tenta o próximo.
+const FLASH_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"];
+
+// Chama a IA com retry/backoff em erros transitórios (503/overload/429) e troca de modelo.
+async function generateWithRetry(contents: string, responseSchema: any, temperature: number) {
+  let lastErr: any;
+  for (const model of FLASH_MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await getAiClient().models.generateContent({
+          model,
+          contents,
+          config: { temperature, responseMimeType: "application/json", responseSchema },
+        });
+      } catch (e: any) {
+        lastErr = e;
+        const msg = String(e?.message || e);
+        const transient = /503|UNAVAILABLE|overload|high demand|429|RESOURCE_EXHAUSTED/i.test(msg);
+        if (!transient) throw e;
+        await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 // ─── Express App ──────────────────────────────────────────────────────────────
 
 const app = express();
@@ -209,15 +235,15 @@ app.get("/api/generate-simulado", async (_req, res) => {
     // Gera 10 questões de uma disciplina, focadas em 5 temas sorteados do edital.
     const genSubject = async (subject: string, topics: string) => {
       const seed = Math.floor(Math.random() * 1000000);
-      const resp = await getAiClient().models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Gere EXATAMENTE 10 questões inéditas de múltipla escolha de "${subject}" para a prova ETE PE (subsequente).
+      const resp = await generateWithRetry(
+        `Gere EXATAMENTE 10 questões inéditas de múltipla escolha de "${subject}" para a prova ETE PE (subsequente).
 Seed de Variância: ${seed} (use para garantir que as questões sejam 100% INÉDITAS e diferentes de simulados anteriores).
 Crie 2 questões para CADA um destes 5 temas sorteados do edital (total 10):
 ${topics}
 Cada questão deve ter enunciado claro (com texto-base curto inédito quando fizer sentido), 5 alternativas (A-E), apenas 1 correta e explicação detalhada. Use sempre cenários, nomes e valores novos.`,
-        config: { temperature: 0.95, responseMimeType: "application/json", responseSchema: schema10 },
-      });
+        schema10,
+        0.95
+      );
       if (!resp.text) throw new Error(`Resposta vazia (${subject}).`);
       return (JSON.parse(resp.text.trim()) as any[]).slice(0, 10).map((q) => ({ ...q, subject }));
     };
@@ -240,7 +266,7 @@ Cada questão deve ter enunciado claro (com texto-base curto inédito quando fiz
     return res.json({ questions });
   } catch (error: any) {
     console.warn("/api/generate-simulado fallback:", error.message);
-    return res.json({ questions: getFallbackSimulado(), isFallback: true, _debug: String(error?.message || error).slice(0, 400) });
+    return res.json({ questions: getFallbackSimulado(), isFallback: true });
   }
 });
 

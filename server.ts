@@ -271,20 +271,36 @@ Forneça também uma explicação detalhada da resposta correta para cada quest�
         },
       };
 
+      const FLASH_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"];
       const client = getAiClient();
       const genSubject = async (subject: string, topics: string) => {
         const seed = Math.floor(Math.random() * 1000000);
-        const resp = await client.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: `Gere EXATAMENTE 10 questões inéditas de múltipla escolha de "${subject}" para a prova ETE PE (subsequente).
+        const contents = `Gere EXATAMENTE 10 questões inéditas de múltipla escolha de "${subject}" para a prova ETE PE (subsequente).
 Seed de Variância: ${seed} (use para garantir que as questões sejam 100% INÉDITAS e diferentes de simulados anteriores).
 Crie 2 questões para CADA um destes 5 temas sorteados do edital (total 10):
 ${topics}
-Cada questão deve ter enunciado claro (com texto-base curto inédito quando fizer sentido), 5 alternativas (A-E), apenas 1 correta e explicação detalhada. Use sempre cenários, nomes e valores novos.`,
-          config: { temperature: 0.95, responseMimeType: "application/json", responseSchema: schema10 },
-        });
-        if (!resp.text) throw new Error(`Resposta vazia (${subject}).`);
-        return (JSON.parse(resp.text.trim()) as any[]).slice(0, 10).map((q) => ({ ...q, subject }));
+Cada questão deve ter enunciado claro (com texto-base curto inédito quando fizer sentido), 5 alternativas (A-E), apenas 1 correta e explicação detalhada. Use sempre cenários, nomes e valores novos.`;
+        // Retry/backoff em 503/overload, com troca de modelo de reserva.
+        let lastErr: any;
+        for (const model of FLASH_MODELS) {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const resp = await client.models.generateContent({
+                model,
+                contents,
+                config: { temperature: 0.95, responseMimeType: "application/json", responseSchema: schema10 },
+              });
+              if (!resp.text) throw new Error(`Resposta vazia (${subject}).`);
+              return (JSON.parse(resp.text.trim()) as any[]).slice(0, 10).map((q) => ({ ...q, subject }));
+            } catch (e: any) {
+              lastErr = e;
+              const msg = String(e?.message || e);
+              if (!/503|UNAVAILABLE|overload|high demand|429|RESOURCE_EXHAUSTED/i.test(msg)) throw e;
+              await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+            }
+          }
+        }
+        throw lastErr;
       };
 
       // Disciplinas em paralelo — metade do tempo de uma chamada única de 20 questões.
