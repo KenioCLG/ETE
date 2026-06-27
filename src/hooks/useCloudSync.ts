@@ -82,10 +82,17 @@ export function useCloudSync() {
           });
           lastSyncHash.current = cloudHash;
 
-          // Recarrega no MÁXIMO uma vez por sessão para os componentes lerem o
-          // novo localStorage — a trava impede o loop infinito de F5.
-          if (!sessionStorage.getItem('ete_cloud_reloaded')) {
+          // Recarrega para os componentes lerem o novo localStorage — mas com
+          // DUAS travas à prova de loop:
+          //  1) sessionStorage: no máx. 1 reload por sessão da aba.
+          //  2) timestamp (localStorage, chave NÃO sincronizada): no máx. 1
+          //     reload a cada 60s, sobrevive mesmo se a sessão for limpa.
+          // Nota: a chave NÃO começa com 'ete_' para não entrar no snapshot.
+          const lastReload = parseInt(localStorage.getItem('cloudsync_last_reload') || '0', 10);
+          const recentlyReloaded = Date.now() - lastReload < 60000;
+          if (!sessionStorage.getItem('ete_cloud_reloaded') && !recentlyReloaded) {
             sessionStorage.setItem('ete_cloud_reloaded', '1');
+            localStorage.setItem('cloudsync_last_reload', String(Date.now()));
             window.location.reload();
             return;
           }
