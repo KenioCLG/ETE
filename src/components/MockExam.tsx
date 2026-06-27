@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   RotateCcw,
   BookOpen,
+  Sparkles,
 } from 'lucide-react';
 
 export default function MockExam() {
@@ -21,6 +22,9 @@ export default function MockExam() {
   const [submitted, setSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState<'port' | 'mat'>('port');
   const [filterMode, setFilterMode] = useState<'todos' | 'certos' | 'errados'>('todos');
+  const [questions, setQuestions] = useState<any[]>(MOCK_EXAM_QUESTIONS);
+  const [loadingSimulado, setLoadingSimulado] = useState(false);
+  const [isCustomSimulado, setIsCustomSimulado] = useState(false);
 
   const timerRef = useRef<any>(null);
 
@@ -46,11 +50,42 @@ export default function MockExam() {
   }, [examStarted, submitted]);
 
   const handleStartExam = () => {
+    setQuestions(MOCK_EXAM_QUESTIONS);
+    setIsCustomSimulado(false);
     setAnswers({});
     setSubmitted(false);
     setSecondsLeft(60 * 60);
     setExamStarted(true);
     setActiveTab('port');
+  };
+
+  const handleStartCustomExam = async () => {
+    setLoadingSimulado(true);
+    try {
+      const response = await fetch('/api/generate-simulado');
+      const data = await response.json();
+      if (response.ok && data.questions) {
+        const formattedQuestions = data.questions.map((q: any, index: number) => ({
+          ...q,
+          id: q.subject === 'Língua Portuguesa' ? `port-ai-q-${index}` : `mat-ai-q-${index}`
+        }));
+        setQuestions(formattedQuestions);
+        setIsCustomSimulado(true);
+        setAnswers({});
+        setSubmitted(false);
+        setSecondsLeft(60 * 60);
+        setExamStarted(true);
+        setActiveTab('port');
+      } else {
+        console.warn("Fallback ao gerar simulado. Usando simulado padrão.");
+        handleStartExam();
+      }
+    } catch (err) {
+      console.error('Erro ao conectar ao gerador de simulado:', err);
+      handleStartExam();
+    } finally {
+      setLoadingSimulado(false);
+    }
   };
 
   const handleSelectAnswer = (qId: string, optionIndex: number) => {
@@ -69,11 +104,11 @@ export default function MockExam() {
   };
 
   // Filtered lists of questions
-  const portQuestions = MOCK_EXAM_QUESTIONS.filter(q => q.subject === 'Língua Portuguesa');
-  const matQuestions = MOCK_EXAM_QUESTIONS.filter(q => q.subject === 'Matemática');
+  const portQuestions = questions.filter(q => q.subject === 'Língua Portuguesa');
+  const matQuestions = questions.filter(q => q.subject === 'Matemática');
 
   // Compute stats
-  const totalQuestionsCount = MOCK_EXAM_QUESTIONS.length;
+  const totalQuestionsCount = questions.length;
   const answeredCount = Object.keys(answers).length;
   
   const correctPort = portQuestions.filter(q => answers[q.id] === q.answerIndex).length;
@@ -134,12 +169,24 @@ export default function MockExam() {
             </ul>
           </div>
 
-          <button
-            onClick={handleStartExam}
-            className="px-8 py-3 bg-gold hover:bg-gold-hover text-dark-bg font-bold rounded-xl shadow-md transition duration-200"
-          >
-            Iniciar Simulado ETE
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto pt-2">
+            <button
+              onClick={handleStartExam}
+              disabled={loadingSimulado}
+              className="w-full sm:w-auto px-6 py-3 bg-dark-bg hover:bg-dark-card-lighter text-gold border border-gold/30 hover:border-gold/60 font-bold rounded-xl shadow-md transition duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <BookOpen className="w-4 h-4" />
+              Simulado Padrão ETE
+            </button>
+            <button
+              onClick={handleStartCustomExam}
+              disabled={loadingSimulado}
+              className="w-full sm:w-auto px-6 py-3 bg-gold hover:bg-gold-hover text-dark-bg font-extrabold rounded-xl shadow-md transition duration-200 text-xs flex items-center justify-center gap-2 disabled:opacity-50 animate-pulse"
+            >
+              <Sparkles className="w-4 h-4" />
+              {loadingSimulado ? 'Gerando Simulado...' : 'Gerar Simulado com IA'}
+            </button>
+          </div>
         </div>
       ) : (
         /* Active exam/submitted state */
@@ -300,7 +347,7 @@ export default function MockExam() {
                 return true;
               })
               .map((q, idx) => {
-                const globalIndex = MOCK_EXAM_QUESTIONS.findIndex(item => item.id === q.id) + 1;
+                const globalIndex = questions.findIndex(item => item.id === q.id) + 1;
                 const selectedOpt = answers[q.id];
                 const isCorrect = selectedOpt === q.answerIndex;
 

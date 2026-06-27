@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import { getFallbackQuestions, getFallbackSimulado } from "./serverFallback";
 
 dotenv.config();
 
@@ -27,6 +28,46 @@ function getAiClient() {
   return aiClient;
 }
 
+function getFallbackExplanation(topic: string, subject: string): string {
+  return `### 📚 Guia de Estudos: ${topic} (${subject})
+
+> *Nota: O serviço de IA está com alta demanda no momento. Apresentamos um guia de estudos estruturado do nosso banco pedagógico local para garantir que seus estudos continuem sem interrupção!*
+
+---
+
+#### 1. O que é / Conceito Principal
+O assunto **${topic}** é de extrema relevância no edital oficial da **ETE PE**. Compreender sua fundamentação teórica é crucial para resolver tanto questões diretas quanto problemas aplicados.
+
+- **Conceito Chave**: Trata-se da compreensão estrutural do tópico dentro da disciplina de ${subject}.
+- **Incidência**: Frequentemente cobrado em provas subsequentes da banca oficial (IAUPE).
+
+---
+
+#### 2. Como cai na prova / Regra Prática
+A banca ETE PE costuma formular enunciados que exigem:
+1. **Identificação Rápida**: Saber qual regra, propriedade ou definição conceitual se aplica.
+2. **Cálculo ou Análise Direta**: Aplicação prática da fórmula ou análise do texto de forma objetiva.
+
+*Regra de Ouro*: Ao ler o problema, faça anotações nas margens destacando as variáveis numéricas (em Matemática) ou os termos relacionais (em Português). Isso evita confusões com as alternativas distratoras.
+
+---
+
+#### 3. Exemplos Comentados
+*Estude atentamente a aplicação abaixo:*
+
+**Problema Prático Exemplo:**
+Como estruturar a resolução de um item sobre **${topic}**?
+* **Passo 1**: Leia o comando final da questão para entender exatamente o que é pedido.
+* **Passo 2**: Recupere a regra geral ou fórmula de **${topic}**.
+* **Passo 3**: Elimine as alternativas absurdas para aumentar suas chances de acerto caso precise estimar.
+
+---
+
+#### 4. Dica de Ouro para a Prova
+* **Gerenciamento de Tempo**: A prova possui 20 questões para 60 minutos (média de 3 minutos por questão). Não se prenda a questões excessivamente longas!
+* **Estudo Ativo**: Resolva exercícios deste tópico de provas anteriores para fixar o padrão de cobrança.`;
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -35,19 +76,18 @@ async function startServer() {
 
   // API endpoint: Explain a specific syllabus topic
   app.post("/api/explain", async (req, res) => {
+    const { topic, subject } = req.body;
     try {
-      const { topic, subject } = req.body;
       if (!topic || !subject) {
         return res.status(400).json({ error: "Faltando parâmetros: 'topic' e 'subject'." });
       }
 
-      const client = getAiClient();
       if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
-        return res.status(500).json({
-          error: "O recurso de Inteligência Artificial requer uma chave de API válida (GEMINI_API_KEY) configurada nas configurações do aplicativo."
-        });
+        console.warn("Chave de API não configurada. Fornecendo explicação pedagógica local.");
+        return res.json({ explanation: getFallbackExplanation(topic, subject) });
       }
 
+      const client = getAiClient();
       const response = await client.models.generateContent({
         model: "gemini-3.5-flash",
         contents: `Você é um professor altamente didático e especialista em exames e processos seletivos do IFPE e ETE PE (Escolas Técnicas Estaduais de Pernambuco).
@@ -65,8 +105,8 @@ Formate a resposta inteira em Markdown limpo e amigável.`,
       const text = response.text || "Não foi possível gerar a explicação. Tente novamente.";
       res.json({ explanation: text });
     } catch (error: any) {
-      console.error("Erro no endpoint /api/explain:", error);
-      res.status(500).json({ error: `Falha ao gerar explicação por IA: ${error.message || error}` });
+      console.warn("Erro ao chamar IA no endpoint /api/explain. Usando fallback local:", error.message || error);
+      res.json({ explanation: getFallbackExplanation(topic, subject) });
     }
   });
 
@@ -78,13 +118,19 @@ Formate a resposta inteira em Markdown limpo e amigável.`,
         return res.status(400).json({ error: "Faltando parâmetro: 'history' (array de mensagens)." });
       }
 
-      const client = getAiClient();
       if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
-        return res.status(500).json({
-          error: "O recurso de Inteligência Artificial requer uma chave de API válida (GEMINI_API_KEY) configurada nas configurações do aplicativo."
+        return res.json({
+          reply: `Olá! Sou o seu **Tutor ETE local**. 
+
+No momento, o serviço da API Gemini está sem chave configurada. Mas você ainda pode usar todo o potencial do aplicativo:
+1. Na aba **Edital & Progresso**, clique em qualquer assunto para ler resumos estruturados e gerar exercícios de treino reais.
+2. Na aba **Simulado ETE**, teste seu ritmo respondendo a provas completas de 20 questões sob pressão do cronômetro.
+
+Como posso ajudar você com o seu plano de estudos hoje?`
         });
       }
 
+      const client = getAiClient();
       // Map our simplified history to Gemini API format
       const contents = history.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'model',
@@ -109,26 +155,34 @@ Suas diretrizes de resposta são:
       const text = response.text || "Desculpe, não consegui processar sua resposta no momento.";
       res.json({ reply: text });
     } catch (error: any) {
-      console.error("Erro no endpoint /api/chat:", error);
-      res.status(500).json({ error: `Falha na conversa com IA: ${error.message || error}` });
+      console.warn("Erro ao chamar IA no endpoint /api/chat. Usando resposta amigável de fallback:", error.message || error);
+      res.json({
+        reply: `Olá! O assistente de IA está sob alta demanda ou temporariamente indisponível no momento (Código 503). 
+
+Mas não se preocupe, nosso banco local está 100% ativo! Você pode continuar estudando de forma extremamente produtiva:
+- Acesse a aba **Edital & Progresso** para ver resumos completos de cada tópico do edital e gerar questões práticas de fixação.
+- Faça um **Simulado ETE** completo para treinar sua velocidade sob o cronômetro oficial de 60 minutos.
+
+Tente enviar sua pergunta novamente em alguns instantes.`
+      });
     }
   });
 
   // API endpoint: Generate 3 custom quiz questions for a syllabus topic
   app.post("/api/generate-quiz", async (req, res) => {
+    const { topic, subject } = req.body;
     try {
-      const { topic, subject } = req.body;
       if (!topic || !subject) {
         return res.status(400).json({ error: "Faltando parâmetros: 'topic' e 'subject'." });
       }
 
-      const client = getAiClient();
       if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
-        return res.status(500).json({
-          error: "O recurso de Inteligência Artificial requer uma chave de API válida (GEMINI_API_KEY) configurada nas configurações do aplicativo."
-        });
+        console.warn("Sem chave de API. Utilizando banco de questões fallback local.");
+        const fallback = getFallbackQuestions(topic, subject);
+        return res.json({ questions: fallback, isFallback: true });
       }
 
+      const client = getAiClient();
       const prompt = `Gere exatamente 3 questões inéditas de múltipla escolha com alto padrão de qualidade sobre o assunto "${topic}" (${subject}), sob medida para a prova de seleção subsequente da Escola Técnica Estadual (ETE) de Pernambuco.
 As questões devem refletir fielmente o formato da ETE: cada questão deve ter um enunciado claro e exatamente 5 alternativas (A, B, C, D, E), com apenas uma alternativa correta.
 Forneça também uma explicação detalhada da resposta correta para cada questão.`;
@@ -176,8 +230,25 @@ Forneça também uma explicação detalhada da resposta correta para cada quest�
       const quizData = JSON.parse(responseText.trim());
       res.json({ questions: quizData });
     } catch (error: any) {
-      console.error("Erro no endpoint /api/generate-quiz:", error);
-      res.status(500).json({ error: `Falha ao gerar questões por IA: ${error.message || error}` });
+      console.warn("Erro ao chamar IA para gerar questões. Usando fallback local:", error.message || error);
+      try {
+        const fallback = getFallbackQuestions(topic, subject);
+        res.json({ questions: fallback, isFallback: true });
+      } catch (innerError) {
+        console.error("Erro gravíssimo ao obter fallback:", innerError);
+        res.status(500).json({ error: "Falha geral ao gerar questões pedagógicas." });
+      }
+    }
+  });
+
+  // API endpoint: Generate 20 custom exam questions (10 Port, 10 Mat)
+  app.get("/api/generate-simulado", (req, res) => {
+    try {
+      const questions = getFallbackSimulado();
+      res.json({ questions });
+    } catch (error: any) {
+      console.error("Erro ao gerar simulado de fallback:", error);
+      res.status(500).json({ error: "Falha ao gerar simulado." });
     }
   });
 

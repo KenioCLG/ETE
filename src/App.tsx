@@ -166,7 +166,7 @@ export default function App() {
       {/* Main layout frame */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Left Sidebar Navigation for Desktop */}
-        <aside className="hidden md:block w-64 bg-dark-bg border-r border-dark-border p-4 space-y-6">
+        <aside className="hidden md:block w-64 bg-dark-bg border-r border-dark-border p-4 space-y-6 sticky top-[61px] h-[calc(100vh-61px)] overflow-y-auto self-start">
           <div className="space-y-2">
             <span className="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em] block px-3">
               Menu de Estudos
